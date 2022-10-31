@@ -5,4 +5,4 @@ python3 -m domainbed.scripts.train \
        --test_env 0 \
        --init_step \
        --path_for_init ./pretrain.pth \
-       --steps 0 \
+       --steps 0
