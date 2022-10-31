@@ -66,6 +66,8 @@ class Algorithm(torch.nn.Module):
     - predict()
     """
     def __init__(self, input_shape, num_classes, num_domains, hparams):
+        print("In Algorithm:")
+        print(f"\tinput_shape: {input_shape}, num_classes: {num_classes}, num_domains: {num_domains}")
         super(Algorithm, self).__init__()
         self.hparams = hparams
 
@@ -121,6 +123,8 @@ class ERM(Algorithm):
     def update(self, minibatches, unlabeled=None):
         all_x = torch.cat([x for x,y in minibatches])
         all_y = torch.cat([y for x,y in minibatches])
+        
+        # training loss
         loss = F.cross_entropy(self.predict(all_x), all_y)
 
         self.optimizer.zero_grad()

@@ -181,6 +181,8 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
         super().__init__()
         environments = [f.name for f in os.scandir(root) if f.is_dir()]
         environments = sorted(environments)
+        for i in range(len(environments)):
+            print(f"env_{i}:", environments[i])
 
         transform = transforms.Compose([
             transforms.Resize((224,224)),
@@ -209,13 +211,17 @@ class MultipleEnvironmentImageFolder(MultipleDomainDataset):
                 env_transform = transform
 
             path = os.path.join(root, environment)
-            env_dataset = ImageFolder(path,
-                transform=env_transform)
-
+            env_dataset = ImageFolder(path, transform=env_transform)
             self.datasets.append(env_dataset)
 
         self.input_shape = (3, 224, 224,)
         self.num_classes = len(self.datasets[-1].classes)
+
+        for t_env in test_envs:
+            print("test_env: ", environments[t_env])
+            
+        print("dataset classes: ", self.datasets[-1].classes)
+
 
 class VLCS(MultipleEnvironmentImageFolder):
     CHECKPOINT_FREQ = 50 ## DiWA ##

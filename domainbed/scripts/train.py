@@ -100,8 +100,8 @@ if __name__ == "__main__":
         device = "cpu"
 
     if args.dataset in vars(datasets):
-        dataset = vars(datasets)[args.dataset](args.data_dir,
-            args.test_envs, hparams)
+        dataset = vars(datasets)[args.dataset](args.data_dir, args.test_envs, hparams)
+        # e.g. PACS(root, test_envs, hparams)
     else:
         raise NotImplementedError
 
@@ -109,19 +109,22 @@ if __name__ == "__main__":
     # each in-split except the test envs, and evaluate on all splits.
 
     # To allow unsupervised domain adaptation experiments, we split each test
-    # env into 'in-split', 'uda-split' and 'out-split'. The 'in-split' is used
-    # by collect_results.py to compute classification accuracies.  The
-    # 'out-split' is used by the Oracle model selectino method. The unlabeled
-    # samples in 'uda-split' are passed to the algorithm at training time if
-    # args.task == "domain_adaptation". If we are interested in comparing
-    # domain generalization and domain adaptation results, then domain
-    # generalization algorithms should create the same 'uda-splits', which will
-    # be discared at training.
+    # env into 'in-split', 'uda-split' and 'out-split'. 
+    # The 'in-split' is used by collect_results.py to compute classification accuracies.  
+    # The 'out-split' is used by the Oracle model selection method. 
+    # The unlabeled samples in 'uda-split' are passed to the algorithm at training time if
+    #       args.task == "domain_adaptation". 
+    # If we are interested in comparing domain generalization and domain adaptation results, 
+    #       then domain generalization algorithms should create the same 'uda-splits', 
+    #       which will be discared at training.
+
     in_splits = []
     out_splits = []
     uda_splits = []
 
     for env_i, env in enumerate(dataset):
+        # each env is a dataset that contains all the images in that domain
+
         uda = []
 
         out, in_ = misc.split_dataset(env,
@@ -150,8 +153,8 @@ if __name__ == "__main__":
     if args.task == "domain_adaptation" and len(uda_splits) == 0:
         raise ValueError("Not enough unlabeled samples for domain adaptation.")
 
-    # each domain corresponds to 1 dataloader
-    # except the test domains
+    # in_splits has all the train_splits from all the train domains
+    # except the test domain
     train_loaders = [InfiniteDataLoader(
         dataset=env,
         weights=env_weights,
@@ -184,6 +187,8 @@ if __name__ == "__main__":
         for i in range(len(out_splits))]
     eval_loader_names += ['env{}_uda'.format(i)
         for i in range(len(uda_splits))]
+
+    print("eval_loader_names: ", eval_loader_names)
 
     algorithm_class = algorithms.get_algorithm_class(args.algorithm)
     if args.algorithm == "ERM":
@@ -228,6 +233,8 @@ if __name__ == "__main__":
 
     best_score = -float("inf")
     last_results_keys = None
+
+    # training
     for step in range(start_step, n_steps):
         step_start_time = time.time()
         minibatches_device = [(x.to(device), y.to(device))
@@ -237,6 +244,8 @@ if __name__ == "__main__":
                 for x,_ in next(uda_minibatches_iterator)]
         else:
             uda_device = None
+        
+        # update
         step_vals = algorithm.update(minibatches_device, uda_device)
         checkpoint_vals['step_time'].append(time.time() - step_start_time)
 
@@ -252,6 +261,7 @@ if __name__ == "__main__":
             for key, val in checkpoint_vals.items():
                 results[key] = np.mean(val)
 
+            # every few iterations, do evaluation
             evals = zip(eval_loader_names, eval_loaders, eval_weights)
             for name, loader, weights in evals:
                 acc = misc.accuracy(algorithm, loader, weights, device)
