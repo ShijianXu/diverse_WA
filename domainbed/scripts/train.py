@@ -14,6 +14,7 @@ import PIL
 import torch
 import torchvision
 import torch.utils.data
+from torchvision.utils import save_image
 
 from domainbed import datasets
 from domainbed import hparams_registry
@@ -119,6 +120,7 @@ if __name__ == "__main__":
     in_splits = []
     out_splits = []
     uda_splits = []
+
     for env_i, env in enumerate(dataset):
         uda = []
 
@@ -138,14 +140,18 @@ if __name__ == "__main__":
                 uda_weights = misc.make_weights_for_balanced_classes(uda)
         else:
             in_weights, out_weights, uda_weights = None, None, None
+        
         in_splits.append((in_, in_weights))
         out_splits.append((out, out_weights))
+        
         if len(uda):
             uda_splits.append((uda, uda_weights))
 
     if args.task == "domain_adaptation" and len(uda_splits) == 0:
         raise ValueError("Not enough unlabeled samples for domain adaptation.")
 
+    # each domain corresponds to 1 dataloader
+    # except the test domains
     train_loaders = [InfiniteDataLoader(
         dataset=env,
         weights=env_weights,
@@ -167,6 +173,10 @@ if __name__ == "__main__":
         batch_size=64,
         num_workers=dataset.N_WORKERS)
         for env, _ in (in_splits + out_splits + uda_splits)]
+
+    print(f"num train loaders: {len(train_loaders)}, num uda loaders: {len(uda_loaders)}, num eval_loaders: {len(eval_loaders)}")
+
+
     eval_weights = [None for _, weights in (in_splits + out_splits + uda_splits)]
     eval_loader_names = ['env{}_in'.format(i)
         for i in range(len(in_splits))]
