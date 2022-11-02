@@ -274,6 +274,9 @@ if __name__ == "__main__":
         step_vals = algorithm.update(minibatches_device, uda_device)
         checkpoint_vals['step_time'].append(time.time() - step_start_time)
 
+        if step % checkpoint_freq == 0:
+            print(step_vals)
+
         for key, val in step_vals.items():
             checkpoint_vals[key].append(val)
 
