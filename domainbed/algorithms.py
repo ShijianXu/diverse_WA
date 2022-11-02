@@ -23,6 +23,8 @@ from domainbed.lib.misc import (
 
 ALGORITHMS = [
     'ERM',
+    # ERM for 2 models
+    'ERM_2',
     "MA",
     'Fish',
     'IRM',
@@ -84,6 +86,7 @@ class Algorithm(torch.nn.Module):
     def predict(self, x):
         raise NotImplementedError
 
+
 class ERM(Algorithm):
     """
     Empirical Risk Minimization (ERM)
@@ -140,6 +143,90 @@ class ERM(Algorithm):
     def save_path_for_future_init(self, path_for_init):
         assert not os.path.exists(path_for_init), "The initialization has already been saved"
         torch.save(self.network.state_dict(), path_for_init)
+
+
+class ERM_2(object):
+    """
+    Empirical Risk Minimization for 2 models (ERM_2)
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams1, hparams2, init_step=False, path_for_init=None):
+        super(ERM_2, self).__init__()
+
+        self.hparams1 = hparams1
+        self.hparams2 = hparams2
+
+        # model_1
+        self.featurizer1 = networks.Featurizer(input_shape, self.hparams1)
+        self.classifier1 = networks.Classifier(
+            self.featurizer.n_outputs,
+            num_classes,
+            self.hparams1['nonlinear_classifier'])
+        self.network1 = nn.Sequential(self.featurizer1, self.classifier1)
+
+        # model_2
+        self.featurizer2 = networks.Featurizer(input_shape, self.hparams2)
+        self.classifier2 = networks.Classifier(
+            self.featurizer.n_outputs,
+            num_classes,
+            self.hparams2['nonlinear_classifier'])
+        self.network2 = nn.Sequential(self.featurizer2, self.classifier2)
+
+
+        ## DiWA load shared initialization ##
+        if path_for_init is not None:
+            if os.path.exists(path_for_init):
+                self.network1.load_state_dict(torch.load(path_for_init))
+                self.network2.load_state_dict(torch.load(path_for_init))
+            else:
+                assert init_step, "Your initialization has not been saved yet"
+
+        ## DiWA choose weights to be optimized ##
+        if not init_step:
+            parameters_to_be_optimized1 = self.network1.parameters()
+            parameters_to_be_optimized2 = self.network2.parameters()
+        else:
+            raise NotImplementedError
+
+        self.optimizer1 = torch.optim.Adam(
+            parameters_to_be_optimized1,
+            lr=self.hparams1["lr"],
+            weight_decay=self.hparams1['weight_decay']
+        )
+        self.optimizer2 = torch.optim.Adam(
+            parameters_to_be_optimized2,
+            lr=self.hparams2["lr"],
+            weight_decay=self.hparams2['weight_decay']
+        )
+
+    def update(self, minibatches, unlabeled=None):
+        all_x = torch.cat([x for x,y in minibatches])
+        all_y = torch.cat([y for x,y in minibatches])
+        
+        # training loss
+        pred1, pred2 = self.predict(all_x)
+
+        # TODO: NEW loss
+        #loss = F.cross_entropy(self.predict(all_x), all_y)
+        loss1 = ...
+        loss2 = ...
+
+        # update model_1
+        self.optimizer1.zero_grad()
+        loss1.backward()
+        self.optimizer1.step()
+
+        # update model_2
+        self.optimizer2.zero_grad()
+        loss2.backward()
+        self.optimizer2.step()
+
+        return {'loss1': loss1.item(), 'loss2': loss2.item()}
+
+    def predict(self, x):
+        pred1 = self.network1(x)
+        pred2 = self.network2(x)
+        return pred1, pred2
 
 
 ## DiWA to reproduce moving average baseline ##

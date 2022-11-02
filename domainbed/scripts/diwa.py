@@ -59,6 +59,11 @@ def create_splits(domain, inf_args, dataset, _filter):
 
 
 def get_dict_folder_to_score(inf_args):
+    if torch.cuda.is_available():
+        device = "cuda"
+    else:
+        device = "cpu"
+
     output_folders = [
         os.path.join(output_dir, path)
         for output_dir in inf_args.output_dir.split(",")
@@ -72,7 +77,7 @@ def get_dict_folder_to_score(inf_args):
     dict_folder_to_score = {}
     for folder in output_folders:
         model_path = os.path.join(folder, "model_best.pkl")
-        save_dict = torch.load(model_path)
+        save_dict = torch.load(model_path, map_location=torch.device(device))
         train_args = save_dict["args"]
 
         if train_args["dataset"] != inf_args.dataset:
@@ -85,22 +90,31 @@ def get_dict_folder_to_score(inf_args):
         print(f"Found: {folder}")
         dict_folder_to_score[folder] = misc.get_score(
             json.loads(save_dict["results"]),
-            [inf_args.test_env], metric_key="Accuracies/acc_net")
+            [inf_args.test_env], metric_key="acc")
+            #[inf_args.test_env], metric_key="Accuracies/acc_net")
+        print(dict_folder_to_score)
+
 
     if len(dict_folder_to_score) == 0:
         raise ValueError(f"No folders found for: {inf_args}")
     return dict_folder_to_score
 
-def get_wa_results(
-    good_checkpoints, dataset, inf_args, data_names, data_splits, device
-):
+
+def get_wa_results(good_checkpoints, dataset, inf_args, data_names, data_splits, device):
+    print(good_checkpoints)
+
+    if torch.cuda.is_available():
+        device = "cuda"
+    else:
+        device = "cpu"
+
     wa_algorithm = algorithms_inference.DiWA(
         dataset.input_shape,
         dataset.num_classes,
         len(dataset) - 1,
     )
     for folder in good_checkpoints:
-        save_dict = torch.load(os.path.join(folder, "model_best.pkl"))
+        save_dict = torch.load(os.path.join(folder, "model_best.pkl"), map_location=torch.device(device))
         train_args = save_dict["args"]
 
         # load individual weights
@@ -170,6 +184,7 @@ def main():
     if inf_args.weight_selection == "restricted":
         assert inf_args.trial_seed != -1
         dict_domain_to_filter["train"] = "out"
+
     for domain in dict_domain_to_filter:
         _data_splits = create_splits(domain, inf_args, dataset, dict_domain_to_filter[domain])
         if domain == "train":
@@ -177,7 +192,6 @@ def main():
         else:
             data_splits.append(_data_splits[0])
         data_names.append(domain)
-
 
     # compute score after weight averaging
     if inf_args.weight_selection == "restricted":

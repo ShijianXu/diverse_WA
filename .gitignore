@@ -1,6 +1,8 @@
 .DS_Store
 train_output/
+sweep_output/
 */__pycache__/*
 *.py[cod]
+domainbed/lib/__pycache__/misc.cpython-38.pyc
 rsync.sh
 *.pth

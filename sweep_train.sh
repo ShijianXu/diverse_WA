@@ -1,11 +1,12 @@
-python3 -m domainbed.scripts.sweep launch \
+python3 -m domainbed.scripts.sweep_diverse launch \
        --data_dir=../data \
        --output_dir=./sweep_output \
        --command_launcher local \
        --datasets PACS \
        --test_env 0 \
        --path_for_init ./PACS_test_0_init.pth \
-       --algorithms ERM \
-       --n_hparams 10 \
-       --n_trials 2 \
-       --skip_confirmation
+       --algorithms ERM_2 \
+       --n_hparams 2 \
+       --n_trials 1 \
+       --steps 1 \
+       --checkpoint_freq 1

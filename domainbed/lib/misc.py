@@ -24,6 +24,7 @@ from collections import Counter
 ## DiWA ##
 def get_score(results, test_envs, metric_key="acc"):
     val_env_keys = []
+
     for i in itertools.count():
         acc_key = f'env{i}_out_' + metric_key
         if acc_key in results:
@@ -32,7 +33,9 @@ def get_score(results, test_envs, metric_key="acc"):
         else:
             break
     assert i > 0
+    print(f"i={i}.")
     return np.mean([results[key] for key in val_env_keys])
+
 
 ## DiWA ##
 class MergeDataset(torch.utils.data.Dataset):
@@ -225,6 +228,44 @@ def accuracy(network, loader, weights, device):
     network.train()
 
     return correct / total
+
+
+# multi-model accuracy compute
+def accuracy_2(algorithm, loader, weights, device):
+    correct_1 = 0
+    correct_2 = 0
+    total = 0
+    weights_offset = 0
+
+    algorithm.eval()
+    with torch.no_grad():
+        for x, y in loader:
+            x = x.to(device)
+            y = y.to(device)
+            pred1, pred2 = algorithm.predict(x)
+            if weights is None:
+                batch_weights = torch.ones(len(x))
+            else:
+                batch_weights = weights[weights_offset : weights_offset + len(x)]
+                weights_offset += len(x)
+            batch_weights = batch_weights.to(device)
+
+            # corret num for model 1
+            if pred1.size(1) == 1:
+                correct_1 += (pred1.gt(0).eq(y).float() * batch_weights.view(-1, 1)).sum().item()
+            else:
+                correct_1 += (pred1.argmax(1).eq(y).float() * batch_weights).sum().item()
+
+            if pred2.size(1) == 1:
+                correct_2 += (pred2.gt(0).eq(y).float() * batch_weights.view(-1, 1)).sum().item()
+            else:
+                correct_2 += (pred2.argmax(1).eq(y).float() * batch_weights).sum().item()
+
+            total += batch_weights.sum().item()
+    algorithm.train()
+
+    return correct_1 / total, correct_2 / total
+
 
 class Tee:
     def __init__(self, fname, mode="a"):
