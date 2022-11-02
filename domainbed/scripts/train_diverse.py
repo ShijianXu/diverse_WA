@@ -84,7 +84,7 @@ if __name__ == "__main__":
     if args.hparams_seed1 == 0:
         hparams_1 = hparams_registry.default_hparams(args.algorithm, args.dataset)
     else:
-        hparams_2 = hparams_registry.random_hparams(args.algorithm, args.dataset,
+        hparams_1 = hparams_registry.random_hparams(args.algorithm, args.dataset,
             misc.seed_hash(args.hparams_seed1, args.trial_seed))
 
     # hparams_2 for model_2
@@ -124,6 +124,8 @@ if __name__ == "__main__":
         dataset = vars(datasets)[args.dataset](args.data_dir, args.test_envs, hparams_1)
     else:
         raise NotImplementedError
+
+    # dataset.N_WORKERS = 1
 
     # Split each env into an 'in-split' and an 'out-split'. We'll train on
     # each in-split except the test envs, and evaluate on all splits.
@@ -215,7 +217,8 @@ if __name__ == "__main__":
         algorithm = algorithm_class(dataset.input_shape, dataset.num_classes,
             len(dataset) - len(args.test_envs), hparams_1, hparams_2,
             init_step=args.init_step,
-            path_for_init=args.path_for_init)
+            path_for_init=args.path_for_init,
+            device=device)
     else:
         raise NotImplementedError
 
@@ -251,7 +254,8 @@ if __name__ == "__main__":
             save_dict["results"] = results
         torch.save(save_dict, os.path.join(args.output_dir, filename))
 
-    best_score = -float("inf")
+    best_score_1 = -float("inf")
+    best_score_2 = -float("inf")
     last_results_keys = None
 
     # training
@@ -285,8 +289,9 @@ if __name__ == "__main__":
             # every few iterations, do evaluation
             evals = zip(eval_loader_names, eval_loaders, eval_weights)
             for name, loader, weights in evals:
-                acc = misc.accuracy(algorithm, loader, weights, device)
-                results[name+'_acc'] = acc
+                acc_1, acc_2 = misc.accuracy_2(algorithm, loader, weights, device)
+                results[name+'_acc_1'] = acc_1
+                results[name+'_acc_2'] = acc_2
 
             results['mem_gb'] = torch.cuda.max_memory_allocated() / (1024.*1024.*1024.)
 
@@ -298,7 +303,8 @@ if __name__ == "__main__":
                 colwidth=12)
 
             results.update({
-                'hparams': hparams,
+                'hparams_1': hparams_1,
+                'hparams_2': hparams_2,
                 'args': vars(args)
             })
 
@@ -306,23 +312,25 @@ if __name__ == "__main__":
             with open(epochs_path, 'a') as f:
                 f.write(json.dumps(results, sort_keys=True) + "\n")
 
+
             ## DiWA ##
-            current_score = misc.get_score(results, args.test_envs)
-            if current_score > best_score:
-                best_score = current_score
-                print(f"Saving new best score at step: {step} at path: model_best.pkl")
-                save_checkpoint(
-                    'model_best.pkl',
-                    results=json.dumps(results, sort_keys=True),
-                )
-                algorithm.to(device)
+            # current_score_1, current_score_2 = misc.get_score_2(results, args.test_envs)
+            # if current_score_1 > best_score_1:
+            #     best_score_1 = current_score_1
+                
+            #     print(f"Saving new best score at step: {step} at path: model_best.pkl")
+            #     save_checkpoint(
+            #         'model_best.pkl',
+            #         results=json.dumps(results, sort_keys=True),
+            #     )
+            #     algorithm.to(device)
 
-            algorithm_dict = algorithm.state_dict()
-            start_step = step + 1
-            checkpoint_vals = collections.defaultdict(lambda: [])
+            # algorithm_dict = algorithm.state_dict()
+            # start_step = step + 1
+            # checkpoint_vals = collections.defaultdict(lambda: [])
 
-            if args.save_model_every_checkpoint:
-                save_checkpoint(f'model_step{step}.pkl')
+            # if args.save_model_every_checkpoint:
+            #     save_checkpoint(f'model_step{step}.pkl')
 
     ## DiWA ##
     if args.init_step:

@@ -21,6 +21,28 @@ import tqdm
 from collections import Counter
 
 
+## Diverse 
+def get_score_2(results, test_envs):
+    val_env_keys_1 = []
+    val_env_keys_2 = []
+
+    for key in results.keys():
+        if '_out_acc_1' in key:
+            for test_env in test_envs:
+                if 'env'+str(test_env) not in key:
+                    val_env_keys_1.append(key)
+        elif '_out_acc_2' in key:
+            for test_env in test_envs:
+                if 'env'+str(test_env) not in key:
+                    val_env_keys_2.append(key)
+
+    assert len(val_env_keys_1) > 0 and len(val_env_keys_2) > 0 and len(val_env_keys_1)==len(val_env_keys_2)
+
+    mean_val_acc_1 = np.mean([results[key] for key in val_env_keys_1])
+    mean_val_acc_2 = np.mean([results[key] for key in val_env_keys_2])
+    return mean_val_acc_1, mean_val_acc_2
+
+
 ## DiWA ##
 def get_score(results, test_envs, metric_key="acc"):
     val_env_keys = []
@@ -33,7 +55,6 @@ def get_score(results, test_envs, metric_key="acc"):
         else:
             break
     assert i > 0
-    print(f"i={i}.")
     return np.mean([results[key] for key in val_env_keys])
 
 

@@ -145,12 +145,13 @@ class ERM(Algorithm):
         torch.save(self.network.state_dict(), path_for_init)
 
 
-class ERM_2(object):
+#==========================================================
+class ERM_2(torch.nn.Module):
     """
     Empirical Risk Minimization for 2 models (ERM_2)
     """
 
-    def __init__(self, input_shape, num_classes, num_domains, hparams1, hparams2, init_step=False, path_for_init=None):
+    def __init__(self, input_shape, num_classes, num_domains, hparams1, hparams2, init_step=False, path_for_init=None, device='cpu'):
         super(ERM_2, self).__init__()
 
         self.hparams1 = hparams1
@@ -159,7 +160,7 @@ class ERM_2(object):
         # model_1
         self.featurizer1 = networks.Featurizer(input_shape, self.hparams1)
         self.classifier1 = networks.Classifier(
-            self.featurizer.n_outputs,
+            self.featurizer1.n_outputs,
             num_classes,
             self.hparams1['nonlinear_classifier'])
         self.network1 = nn.Sequential(self.featurizer1, self.classifier1)
@@ -167,7 +168,7 @@ class ERM_2(object):
         # model_2
         self.featurizer2 = networks.Featurizer(input_shape, self.hparams2)
         self.classifier2 = networks.Classifier(
-            self.featurizer.n_outputs,
+            self.featurizer2.n_outputs,
             num_classes,
             self.hparams2['nonlinear_classifier'])
         self.network2 = nn.Sequential(self.featurizer2, self.classifier2)
@@ -176,8 +177,8 @@ class ERM_2(object):
         ## DiWA load shared initialization ##
         if path_for_init is not None:
             if os.path.exists(path_for_init):
-                self.network1.load_state_dict(torch.load(path_for_init))
-                self.network2.load_state_dict(torch.load(path_for_init))
+                self.network1.load_state_dict(torch.load(path_for_init, map_location=torch.device(device)))
+                self.network2.load_state_dict(torch.load(path_for_init, map_location=torch.device(device)))
             else:
                 assert init_step, "Your initialization has not been saved yet"
 
@@ -199,6 +200,8 @@ class ERM_2(object):
             weight_decay=self.hparams2['weight_decay']
         )
 
+        self.cossim = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
+
     def update(self, minibatches, unlabeled=None):
         all_x = torch.cat([x for x,y in minibatches])
         all_y = torch.cat([y for x,y in minibatches])
@@ -208,8 +211,13 @@ class ERM_2(object):
 
         # TODO: NEW loss
         #loss = F.cross_entropy(self.predict(all_x), all_y)
-        loss1 = ...
-        loss2 = ...
+
+        grad_sim = self.gradient_diverse(pred1, self.feat1, pred2, self.feat2)
+
+        loss1 = F.cross_entropy(pred1, all_y) + grad_sim
+        loss2 = F.cross_entropy(pred2, all_y) + grad_sim
+
+        print(f"loss1: {loss1}, loss2: {loss2}, grad_loss: {grad_sim}")
 
         # update model_1
         self.optimizer1.zero_grad()
@@ -221,12 +229,26 @@ class ERM_2(object):
         loss2.backward()
         self.optimizer2.step()
 
-        return {'loss1': loss1.item(), 'loss2': loss2.item()}
+        return {'loss1': loss1.item(), 'loss2': loss2.item(), 'grad_loss': grad_sim}
 
     def predict(self, x):
-        pred1 = self.network1(x)
-        pred2 = self.network2(x)
+        self.feat1 = self.featurizer1(x)
+        pred1 = self.classifier1(self.feat1)
+
+        self.feat2 = self.featurizer2(x)
+        pred2 = self.classifier2(self.feat2)
         return pred1, pred2
+
+    def gradient_diverse(self, pred1, feat1, pred2, feat2):
+        grad1 = torch.autograd.grad(pred1, feat1, grad_outputs=torch.ones_like(pred1), retain_graph=True)[0]
+        grad2 = torch.autograd.grad(pred2, feat2, grad_outputs=torch.ones_like(pred2), retain_graph=True)[0]
+
+        grad1 = grad1.reshape((grad1.shape[0], -1))
+        grad2 = grad2.reshape((grad2.shape[0], -1))
+
+        sim = torch.mean(self.cossim(grad1, grad2) ** 2)
+
+        return sim
 
 
 ## DiWA to reproduce moving average baseline ##

@@ -58,12 +58,7 @@ def create_splits(domain, inf_args, dataset, _filter):
     return splits
 
 
-def get_dict_folder_to_score(inf_args):
-    if torch.cuda.is_available():
-        device = "cuda"
-    else:
-        device = "cpu"
-
+def get_dict_folder_to_score(inf_args, device):
     output_folders = [
         os.path.join(output_dir, path)
         for output_dir in inf_args.output_dir.split(",")
@@ -71,27 +66,29 @@ def get_dict_folder_to_score(inf_args):
     ]
     output_folders = [
         output_folder for output_folder in output_folders
-        if os.path.isdir(output_folder) and "done" in os.listdir(output_folder) and "model_best.pkl" in os.listdir(output_folder)
+        if os.path.isdir(output_folder) and "done" in os.listdir(output_folder) and "model.pkl" in os.listdir(output_folder)
     ]
 
     dict_folder_to_score = {}
     for folder in output_folders:
-        model_path = os.path.join(folder, "model_best.pkl")
-        save_dict = torch.load(model_path, map_location=torch.device(device))
-        train_args = save_dict["args"]
+        # model_path = os.path.join(folder, "model.pkl")
+        # save_dict = torch.load(model_path, map_location=torch.device(device))
+        # train_args = save_dict["args"]
 
-        if train_args["dataset"] != inf_args.dataset:
-            continue
-        if train_args["test_envs"] != [inf_args.test_env]:
-            continue
-        if train_args["trial_seed"] != inf_args.trial_seed and inf_args.trial_seed != -1:
-            continue
+        # if train_args["dataset"] != inf_args.dataset:
+        #     continue
+        # if train_args["test_envs"] != [inf_args.test_env]:
+        #     continue
+        # if train_args["trial_seed"] != inf_args.trial_seed and inf_args.trial_seed != -1:
+        #     continue
         
-        score = misc.get_score(
-            json.loads(save_dict["results"]),
-            [inf_args.test_env])
+        # score = misc.get_score_2(
+        #     json.loads(save_dict["results"]),
+        #     [inf_args.test_env])
 
-        print(f"Found: {folder} with score: {score}")
+        # print(f"Found: {folder} with score: {score}")
+
+        score = 0
         dict_folder_to_score[folder] = score
 
     if len(dict_folder_to_score) == 0:
@@ -102,28 +99,27 @@ def get_dict_folder_to_score(inf_args):
 def get_wa_results(good_checkpoints, dataset, data_names, data_splits, device):
     print(good_checkpoints)
 
-    if torch.cuda.is_available():
-        device = "cuda"
-    else:
-        device = "cpu"
-
     wa_algorithm = algorithms_inference.DiWA(
         dataset.input_shape,
         dataset.num_classes,
         len(dataset) - 1,
     )
     for folder in good_checkpoints:
-        save_dict = torch.load(os.path.join(folder, "model_best.pkl"), map_location=torch.device(device))
+        save_dict = torch.load(os.path.join(folder, "model.pkl"), map_location=torch.device(device))
         train_args = save_dict["args"]
 
         # load individual weights
-        algorithm = algorithms_inference.ERM(
+        algorithm = algorithms_inference.ERM_2(
             dataset.input_shape, dataset.num_classes,
             len(dataset) - 1,
-            save_dict["model_hparams"]
+            save_dict["model_hparams1"],
+            save_dict["model_hparams2"],
         )
         algorithm.load_state_dict(save_dict["model_dict"], strict=False)
-        wa_algorithm.add_weights(algorithm.network)
+
+        
+        wa_algorithm.add_weights(algorithm.network1)
+        wa_algorithm.add_weights(algorithm.network2)
         del algorithm
 
     wa_algorithm.to(device)
@@ -153,7 +149,6 @@ def get_wa_results(good_checkpoints, dataset, data_names, data_splits, device):
     return dict_results
 
 
-
 def print_results(dict_results):
     results_keys = sorted(list(dict_results.keys()))
     misc.print_row(results_keys, colwidth=12)
@@ -175,7 +170,7 @@ def main():
         raise NotImplementedError
 
     # load individual folders and their corresponding scores on train_out
-    dict_folder_to_score = get_dict_folder_to_score(inf_args)
+    dict_folder_to_score = get_dict_folder_to_score(inf_args, device)
 
     # load data: test and optionally train_out for restricted weight selection
     data_splits, data_names = [], []

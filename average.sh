@@ -1,4 +1,4 @@
-python3 -m domainbed.scripts.diwa \
+python3 -m domainbed.scripts.diwa_diverse \
        --data_dir=../data \
        --output_dir=./sweep_output \
        --dataset PACS \
