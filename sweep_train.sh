@@ -1,4 +1,4 @@
-python -m domainbed.scripts.sweep launch \
+python3 -m domainbed.scripts.sweep launch \
        --data_dir=../data \
        --output_dir=./sweep_output \
        --command_launcher local \
