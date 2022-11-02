@@ -217,7 +217,7 @@ class ERM_2(torch.nn.Module):
         loss1 = F.cross_entropy(pred1, all_y) + grad_sim
         loss2 = F.cross_entropy(pred2, all_y) + grad_sim
 
-        print(f"loss1: {loss1}, loss2: {loss2}, grad_loss: {grad_sim}")
+        # print(f"loss1: {loss1}, loss2: {loss2}, grad_loss: {grad_sim}")
 
         # update model_1
         self.optimizer1.zero_grad()
