@@ -229,6 +229,8 @@ class ERM_2(torch.nn.Module):
         loss2.backward()
         self.optimizer2.step()
 
+        print(f"loss1: {loss1.item()}, loss2: {loss2.item()}, grad_loss: {grad_sim.item()}")
+
         return {'loss1': loss1.item(), 'loss2': loss2.item(), 'grad_loss': grad_sim.item()}
 
     def predict(self, x):
@@ -246,6 +248,7 @@ class ERM_2(torch.nn.Module):
         grad1 = grad1.reshape((grad1.shape[0], -1))
         grad2 = grad2.reshape((grad2.shape[0], -1))
 
+        print("grad shape: ", grad1.shape)
         print("gradient diff: ", torch.linalg.vector_norm(grad1-grad2))
         print("normalized gradient diff: ", torch.linalg.vector_norm(grad1-grad2) / torch.linalg.vector_norm(grad1))
 
