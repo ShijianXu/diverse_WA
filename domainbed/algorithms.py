@@ -228,9 +228,8 @@ class ERM_2(torch.nn.Module):
         loss2.backward()
         self.optimizer2.step()
 
-        # print(f"loss1: {loss1.item()}, loss2: {loss2.item()}, grad_loss: {grad_sim.item()}")
-
-        return {'loss1': loss1.item(), 'loss2': loss2.item(), 'grad_loss': grad_sim.item()}
+        # return {'loss1': loss1.item(), 'loss2': loss2.item(), 'grad_loss': grad_sim.item()}
+        return {'loss1': loss1.item(), 'loss2': loss2.item()}
 
     def predict(self, x):
         self.feat1 = self.featurizer1(x)
