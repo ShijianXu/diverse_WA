@@ -217,8 +217,6 @@ class ERM_2(torch.nn.Module):
         loss1 = F.cross_entropy(pred1, all_y) + grad_sim
         loss2 = F.cross_entropy(pred2, all_y) + grad_sim
 
-        # print(f"loss1: {loss1}, loss2: {loss2}, grad_loss: {grad_sim}")
-
         # update model_1
         self.optimizer1.zero_grad()
         loss1.backward()
@@ -248,11 +246,13 @@ class ERM_2(torch.nn.Module):
         grad1 = grad1.reshape((grad1.shape[0], -1))
         grad2 = grad2.reshape((grad2.shape[0], -1))
 
-        print("grad shape: ", grad1.shape)
-        print("gradient diff: ", torch.linalg.vector_norm(grad1-grad2))
-        print("normalized gradient diff: ", torch.linalg.vector_norm(grad1-grad2) / torch.linalg.vector_norm(grad1))
+        grad_diff = torch.linalg.vector_norm(grad1-grad2)
+        grad_diff_normed = grad_diff / torch.linalg.vector_norm(grad1)
+        print("gradient diff: ", grad_diff.item())
+        print("normalized gradient diff: ", grad_diff_normed.item())
 
-        sim = torch.mean(self.cossim(grad1, grad2) ** 2)
+        # sim = torch.mean(self.cossim(grad1, grad2) ** 2)
+        sim = 1 - grad_diff_normed
 
         return sim
 
