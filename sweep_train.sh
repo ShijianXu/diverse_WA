@@ -6,7 +6,6 @@ python3 -m domainbed.scripts.sweep_diverse launch \
        --test_env 0 \
        --path_for_init ./PACS_test_0_init.pth \
        --algorithms ERM_2 \
-       --n_hparams 2 \
+       --n_hparams 10 \
        --n_trials 1 \
-       --steps 30 \
        --skip_confirmation
