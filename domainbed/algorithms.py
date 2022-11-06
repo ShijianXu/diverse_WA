@@ -212,7 +212,8 @@ class ERM_2(torch.nn.Module):
         # TODO: NEW loss
         #loss = F.cross_entropy(self.predict(all_x), all_y)
 
-        grad_sim = self.gradient_diverse(pred1, self.feat1, pred2, self.feat2)
+        # grad_sim = self.gradient_diverse(pred1, self.feat1, pred2, self.feat2)
+        grad_sim = 0
 
         loss1 = F.cross_entropy(pred1, all_y) + grad_sim
         loss2 = F.cross_entropy(pred2, all_y) + grad_sim
@@ -227,7 +228,7 @@ class ERM_2(torch.nn.Module):
         loss2.backward()
         self.optimizer2.step()
 
-        print(f"loss1: {loss1.item()}, loss2: {loss2.item()}, grad_loss: {grad_sim.item()}")
+        # print(f"loss1: {loss1.item()}, loss2: {loss2.item()}, grad_loss: {grad_sim.item()}")
 
         return {'loss1': loss1.item(), 'loss2': loss2.item(), 'grad_loss': grad_sim.item()}
 
@@ -248,8 +249,9 @@ class ERM_2(torch.nn.Module):
 
         grad_diff = torch.linalg.vector_norm(grad1-grad2)
         grad_diff_normed = grad_diff / torch.linalg.vector_norm(grad1)
-        print("gradient diff: ", grad_diff.item())
-        print("normalized gradient diff: ", grad_diff_normed.item())
+        
+        # print("gradient diff: ", grad_diff.item())
+        # print("normalized gradient diff: ", grad_diff_normed.item())
 
         # sim = torch.mean(self.cossim(grad1, grad2) ** 2)
         sim = 1 - grad_diff_normed

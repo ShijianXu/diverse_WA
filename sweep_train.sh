@@ -1,6 +1,6 @@
 python3 -m domainbed.scripts.sweep_diverse launch \
        --data_dir=../data \
-       --output_dir=./sweep_output \
+       --output_dir=./PACS_0_sweep_output_naive \
        --command_launcher local \
        --datasets PACS \
        --test_env 0 \
