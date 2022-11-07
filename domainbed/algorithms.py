@@ -246,14 +246,11 @@ class ERM_2(torch.nn.Module):
         grad1 = grad1.reshape((grad1.shape[0], -1))
         grad2 = grad2.reshape((grad2.shape[0], -1))
 
-        grad_diff = torch.linalg.vector_norm(grad1-grad2)
-        grad_diff_normed = grad_diff / torch.linalg.vector_norm(grad1)
-        
-        # print("gradient diff: ", grad_diff.item())
-        # print("normalized gradient diff: ", grad_diff_normed.item())
+        # grad_diff = torch.linalg.vector_norm(grad1-grad2)
+        # grad_diff_normed = grad_diff / torch.linalg.vector_norm(grad1)
 
-        # sim = torch.mean(self.cossim(grad1, grad2) ** 2)
-        sim = 1 - grad_diff_normed
+        sim = torch.mean(self.cossim(grad1, grad2) ** 2)
+        # sim = 1 - grad_diff_normed
 
         return sim
 
