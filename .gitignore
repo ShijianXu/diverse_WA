@@ -7,3 +7,4 @@ sweep_diwa/
 domainbed/lib/__pycache__/*
 rsync.sh
 *.pth
+*.pkl
