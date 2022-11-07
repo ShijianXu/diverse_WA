@@ -220,7 +220,7 @@ class ERM_2(torch.nn.Module):
 
         # update model_1
         self.optimizer1.zero_grad()
-        loss1.backward()
+        loss1.backward(retain_graph=True)
         self.optimizer1.step()
 
         # update model_2
