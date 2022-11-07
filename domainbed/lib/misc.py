@@ -225,7 +225,6 @@ def split_meta_train_test(minibatches, num_meta_test=1):
     return pairs
 
 def accuracy(network, loader, weights, device):
-    return 0
     correct = 0
     total = 0
     weights_offset = 0
