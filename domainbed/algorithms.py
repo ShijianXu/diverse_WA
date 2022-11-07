@@ -212,8 +212,8 @@ class ERM_2(torch.nn.Module):
         # TODO: NEW loss
         #loss = F.cross_entropy(self.predict(all_x), all_y)
 
-        grad_sim = self.gradient_diverse(pred1, self.feat1, pred2, self.feat2)
-        # grad_sim = 0
+        # grad_sim = self.gradient_diverse(pred1, self.feat1, pred2, self.feat2)
+        grad_sim = 0
 
         loss1 = F.cross_entropy(pred1, all_y) + grad_sim
         loss2 = F.cross_entropy(pred2, all_y) + grad_sim
@@ -228,8 +228,8 @@ class ERM_2(torch.nn.Module):
         loss2.backward()
         self.optimizer2.step()
 
-        return {'loss1': loss1.item(), 'loss2': loss2.item(), 'grad_loss': grad_sim.item()}
-        # return {'loss1': loss1.item(), 'loss2': loss2.item()}
+        # return {'loss1': loss1.item(), 'loss2': loss2.item(), 'grad_loss': grad_sim.item()}
+        return {'loss1': loss1.item(), 'loss2': loss2.item()}
 
     def predict(self, x):
         self.feat1 = self.featurizer1(x)
