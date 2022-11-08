@@ -143,10 +143,10 @@ def _hparams(algorithm, dataset, random_seed):
 
     ## DiWA ##
     ## Mild hyperparameter ranges as first defined in SWAD (https://arxiv.org/abs/2102.08604)
-    _hparam('lr', 5e-5, lambda r: r.choice([1e-5, 3e-5, 5e-5]))
+    # _hparam('lr', 5e-5, lambda r: r.choice([1e-5, 3e-5, 5e-5]))
     ## DiWA_grad_diverse
     ## More agressive lr change
-    # _hparam('lr', 5e-5, lambda r: r.choice([1e-5, 1e-4, 1e-3]))
+    _hparam('lr', 5e-5, lambda r: r.choice([5e-5, 5e-4, 5e-3]))
     
     # if dataset in SMALL_IMAGES:
     #     _hparam('lr', 1e-3, lambda r: 10**r.uniform(-4.5, -2.5))
