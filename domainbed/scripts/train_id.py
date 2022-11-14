@@ -41,7 +41,7 @@ if __name__ == "__main__":
         'random_hparams).')
     parser.add_argument('--seed', type=int, default=0,
         help='Seed for everything else')
-    parser.add_argument('--steps', type=int, default=None,
+    parser.add_argument('--steps', type=int, default=5001,
         help='Number of steps. Default is dataset-dependent.')
     parser.add_argument('--checkpoint_freq', type=int, default=None,
         help='Checkpoint every N steps. Default is dataset-dependent.')
@@ -164,7 +164,7 @@ if __name__ == "__main__":
 
     steps_per_epoch = len(train_dataset)/hparams['batch_size']
 
-    n_steps = 5001
+    n_steps = args.steps
     print("==> n_steps: ", n_steps)
     checkpoint_freq = args.checkpoint_freq
 
