@@ -1,5 +1,5 @@
 """
-python3 -m domainbed.scripts.diwa \
+python3 -m domainbed.scripts.diwa_id \
        --data_dir=../data \
        --output_dir=./CIFAR100_sweep_diwa \
        --weight_selection uniform \
