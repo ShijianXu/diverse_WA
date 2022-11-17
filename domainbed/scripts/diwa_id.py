@@ -63,9 +63,8 @@ def get_dict_folder_to_score(inf_args):
         model_path = os.path.join(folder, "model_best.pkl")
         save_dict = torch.load(model_path, map_location=torch.device(device))
     
-        score = misc.get_score(
-            json.loads(save_dict["results"]),
-            [inf_args.test_env])
+        results = json.loads(save_dict["results"])
+        score = results["eval_acc"]
 
         print(f"Found: {folder} with score: {score}")
         dict_folder_to_score[folder] = score
