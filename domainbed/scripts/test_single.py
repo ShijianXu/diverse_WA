@@ -96,12 +96,23 @@ def main():
     save_dict = torch.load(inf_args.model_path, map_location=torch.device(device))
     train_args = save_dict["args"]
 
-    algorithm = algorithms_inference.ERM(
-        dataset.input_shape,
-        dataset.num_classes,
-        len(dataset) - 1,
-        save_dict["model_hparams"]
-    )
+    if inf_args.dataset in vars(datasets):
+        algorithm = algorithms_inference.ERM(
+            dataset.input_shape,
+            dataset.num_classes,
+            len(dataset) - 1,
+            save_dict["model_hparams"]
+        )
+    else:
+        INPUT_SHAPE = (3, 224, 224)
+        N_CLASSES = 100
+        N_DOMAINS = 1
+        algorithm = algorithms_inference.ERM(
+            INPUT_SHAPE,
+            N_CLASSES,
+            N_DOMAINS,
+            save_dict["model_hparams"]
+        )
     algorithm.load_state_dict(save_dict["model_dict"], strict=False)
     algorithm.to(device)
     algorithm.eval()
@@ -119,7 +130,7 @@ def main():
         ]
     
         data_evals = zip(data_names, data_loaders)
-        
+
         for name, loader in data_evals:
             print(f"Inference at {name}")
             acc = misc.accuracy(algorithm, loader, None, device)
