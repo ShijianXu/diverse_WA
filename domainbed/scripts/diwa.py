@@ -1,3 +1,13 @@
+"""
+python3 -m domainbed.scripts.diwa \
+       --data_dir=../data \
+       --output_dir=./PACS_0_sweep_diwa \
+       --dataset PACS \
+       --test_env 0 \
+       --weight_selection uniform \
+       --trial_seed -1
+"""
+
 import argparse
 import os
 import json

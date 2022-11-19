@@ -1,6 +1,6 @@
 python3 -m domainbed.scripts.train \
        --data_dir=../data \
-       --output_dir=./VLCS_baseline \
+       --output_dir=./VLCS_pretrain \
        --algorithm ERM \
        --dataset VLCS \
        --test_env 1 \

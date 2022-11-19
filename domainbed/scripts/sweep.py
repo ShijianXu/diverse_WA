@@ -4,6 +4,20 @@
 Run sweeps
 """
 
+"""
+python3 -m domainbed.scripts.sweep launch \
+       --data_dir=../data \
+       --output_dir=./VLCS_3_sweep_diwa \
+       --command_launcher local \
+       --datasets VLCS \
+       --test_env 3 \
+       --path_for_init ./VLCS_test_3_init.pth \
+       --algorithms ERM \
+       --n_hparams 10 \
+       --n_trials 1 \
+       --skip_confirmation
+"""
+
 import argparse
 import copy
 import getpass

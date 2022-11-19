@@ -4,6 +4,20 @@
 Run sweeps
 """
 
+"""
+python3 -m domainbed.scripts.sweep_diverse launch \
+       --data_dir=../data \
+       --output_dir=./PACS_0_sweep_output_naive \
+       --command_launcher local \
+       --datasets PACS \
+       --test_env 0 \
+       --path_for_init ./PACS_test_0_init.pth \
+       --algorithms ERM_2 \
+       --n_hparams 10 \
+       --n_trials 1 \
+       --skip_confirmation
+"""
+
 import argparse
 import copy
 import getpass
