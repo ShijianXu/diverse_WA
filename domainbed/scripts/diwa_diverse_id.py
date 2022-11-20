@@ -1,12 +1,11 @@
 """
-python3 -m domainbed.scripts.diwa_diverse \
+python3 -m domainbed.scripts.diwa_diverse_id \
        --data_dir=../data \
-       --output_dir=./PACS_3_sweep_output_grad_graph \
-       --dataset PACS \
-       --test_env 3 \
+       --output_dir=./CIFAR100_sweep_naive \
        --weight_selection uniform \
        --trial_seed -1
 """
+
 
 import argparse
 import os
@@ -15,6 +14,9 @@ import random
 import numpy as np
 import torch
 import torch.utils.data
+import torchvision
+from torchvision import transforms
+
 from domainbed import datasets, algorithms_inference
 from domainbed.lib import misc
 from domainbed.lib.fast_data_loader import FastDataLoader
@@ -23,9 +25,6 @@ from domainbed.lib import misc
 
 def _get_args():
     parser = argparse.ArgumentParser(description='Domain generalization')
-
-    parser.add_argument('--dataset', type=str)
-    parser.add_argument('--test_env', type=int)
 
     parser.add_argument('--output_dir', type=str)
     parser.add_argument('--data_dir', type=str, default="default")
@@ -43,32 +42,12 @@ def _get_args():
     return inf_args
 
 
-def create_splits(domain, inf_args, dataset, _filter):
-    splits = []
+def get_dict_folder_to_score(inf_args):
+    if torch.cuda.is_available():
+        device = "cuda"
+    else:
+        device = "cpu"
 
-    for env_i, env in enumerate(dataset):
-        if domain == "test" and env_i != inf_args.test_env:
-            continue
-        elif domain == "train" and env_i == inf_args.test_env:
-            continue
-
-        if _filter == "full":
-            splits.append(env)
-        else:
-            out_, in_ = misc.split_dataset(
-                env, int(len(env) * 0.2), misc.seed_hash(inf_args.trial_seed, env_i)
-            )
-            if _filter == "in":
-                splits.append(in_)
-            elif _filter == "out":
-                splits.append(out_)
-            else:
-                raise ValueError(_filter)
-
-    return splits
-
-
-def get_dict_folder_to_score(inf_args, device):
     output_folders = [
         os.path.join(output_dir, path)
         for output_dir in inf_args.output_dir.split(",")
@@ -76,29 +55,20 @@ def get_dict_folder_to_score(inf_args, device):
     ]
     output_folders = [
         output_folder for output_folder in output_folders
-        if os.path.isdir(output_folder) and "done" in os.listdir(output_folder) and "model.pkl" in os.listdir(output_folder)
+        if os.path.isdir(output_folder) and "done" in os.listdir(output_folder) and "model_best.pkl" in os.listdir(output_folder)
     ]
 
     dict_folder_to_score = {}
     for folder in output_folders:
-        # model_path = os.path.join(folder, "model.pkl")
+        # model_path = os.path.join(folder, "model_best.pkl")
         # save_dict = torch.load(model_path, map_location=torch.device(device))
-        # train_args = save_dict["args"]
-
-        # if train_args["dataset"] != inf_args.dataset:
-        #     continue
-        # if train_args["test_envs"] != [inf_args.test_env]:
-        #     continue
-        # if train_args["trial_seed"] != inf_args.trial_seed and inf_args.trial_seed != -1:
-        #     continue
-        
-        # score = misc.get_score_2(
-        #     json.loads(save_dict["results"]),
-        #     [inf_args.test_env])
-
-        # print(f"Found: {folder} with score: {score}")
+    
+        # results = json.loads(save_dict["results"])
+        # score = results["eval_acc"]
 
         score = 0
+
+        print(f"Found: {folder} with score: {score}")
         dict_folder_to_score[folder] = score
 
     if len(dict_folder_to_score) == 0:
@@ -106,27 +76,35 @@ def get_dict_folder_to_score(inf_args, device):
     return dict_folder_to_score
 
 
-def get_wa_results(good_checkpoints, dataset, data_names, data_splits, device):
+def get_wa_results(good_checkpoints, dataset, device):
     print(good_checkpoints)
 
+    if torch.cuda.is_available():
+        device = "cuda"
+    else:
+        device = "cpu"
+
+    INPUT_SHAPE = (3, 224, 224)
+    N_CLASSES = 100
+    N_DOMAINS = 1
     wa_algorithm = algorithms_inference.DiWA(
-        dataset.input_shape,
-        dataset.num_classes,
-        len(dataset) - 1,
+        INPUT_SHAPE,
+        N_CLASSES,
+        N_DOMAINS,
     )
     for folder in good_checkpoints:
-        save_dict = torch.load(os.path.join(folder, "model.pkl"), map_location=torch.device(device))
+        save_dict = torch.load(os.path.join(folder, "model_best.pkl"), map_location=torch.device(device))
         train_args = save_dict["args"]
 
         # load individual weights
         algorithm = algorithms_inference.ERM_2(
-            dataset.input_shape, dataset.num_classes,
-            len(dataset) - 1,
+            INPUT_SHAPE, 
+            N_CLASSES,
+            N_DOMAINS,
             save_dict["model_hparams1"],
             save_dict["model_hparams2"],
         )
         algorithm.load_state_dict(save_dict["model_dict"], strict=False)
-
         
         wa_algorithm.add_weights(algorithm.network1)
         wa_algorithm.add_weights(algorithm.network2)
@@ -140,23 +118,16 @@ def get_wa_results(good_checkpoints, dataset, data_names, data_splits, device):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-    data_loaders = [
-        FastDataLoader(
-            dataset=split,
+    loader = FastDataLoader(
+            dataset=dataset,
             batch_size=64,
-            num_workers=dataset.N_WORKERS
-        ) for split in data_splits
-    ]
+            num_workers=4)
 
-    data_evals = zip(data_names, data_loaders)
     dict_results = {}
-
-    for name, loader in data_evals:
-        print(f"Inference at {name}")
-        dict_results[name + "_acc"] = misc.accuracy(wa_algorithm, loader, None, device)
-
+    dict_results["acc"] = misc.accuracy(wa_algorithm, loader, None, device)
     dict_results["length"] = len(good_checkpoints)
     return dict_results
+
 
 
 def print_results(dict_results):
@@ -171,16 +142,17 @@ def main():
 
     print(f"Begin DiWA for: {inf_args} with device: {device}")
 
-    if inf_args.dataset in vars(datasets):
-        dataset_class = vars(datasets)[inf_args.dataset]
-        dataset = dataset_class(
-            inf_args.data_dir, [inf_args.test_env], hparams={"data_augmentation": False}
-        )
-    else:
-        raise NotImplementedError
+    test_transform = transforms.Compose([
+        transforms.Resize((224,224)),
+        transforms.ToTensor(),
+        transforms.Normalize(
+        mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+    dataset = torchvision.datasets.CIFAR100(root="../data", train=False, download=True, transform=test_transform)
 
     # load individual folders and their corresponding scores on train_out
-    dict_folder_to_score = get_dict_folder_to_score(inf_args, device)
+    dict_folder_to_score = get_dict_folder_to_score(inf_args)
 
     # load data: test and optionally train_out for restricted weight selection
     data_splits, data_names = [], []
@@ -188,14 +160,6 @@ def main():
     if inf_args.weight_selection == "restricted":
         assert inf_args.trial_seed != -1
         dict_domain_to_filter["train"] = "out"
-
-    for domain in dict_domain_to_filter:
-        _data_splits = create_splits(domain, inf_args, dataset, dict_domain_to_filter[domain])
-        if domain == "train":
-            data_splits.append(misc.MergeDataset(_data_splits))
-        else:
-            data_splits.append(_data_splits[0])
-        data_names.append(domain)
 
     # compute score after weight averaging
     if inf_args.weight_selection == "restricted":
@@ -233,7 +197,7 @@ def main():
 
     elif inf_args.weight_selection == "uniform":
         dict_results = get_wa_results(
-            list(dict_folder_to_score.keys()), dataset, data_names, data_splits, device
+            list(dict_folder_to_score.keys()), dataset, device
         )
         print_results(dict_results)
 
