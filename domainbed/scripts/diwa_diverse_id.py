@@ -93,7 +93,7 @@ def get_wa_results(good_checkpoints, dataset, device):
         N_DOMAINS,
     )
     for folder in good_checkpoints:
-        save_dict = torch.load(os.path.join(folder, "model_best.pkl"), map_location=torch.device(device))
+        save_dict = torch.load(os.path.join(folder, "model.pkl"), map_location=torch.device(device))
         train_args = save_dict["args"]
 
         # load individual weights
