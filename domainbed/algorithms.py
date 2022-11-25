@@ -20,8 +20,12 @@ from domainbed.lib.misc import (
     random_pairs_of_minibatches, ParamDict, MovingAverage, l2_between_dicts
 )
 
+from sam import SAMin
+from torch.nn.modules.batchnorm import _BatchNorm
 
 ALGORITHMS = [
+    # Sharpness-Aware Minimization
+    'SAM',
     'ERM',
     # ERM for 2 models
     'ERM_2',
@@ -85,6 +89,84 @@ class Algorithm(torch.nn.Module):
 
     def predict(self, x):
         raise NotImplementedError
+
+
+#==================================================================================
+
+class SAM(Algorithm):
+    """
+    Sharpness-Aware Minimization (SAM)
+    """
+    
+    def __init__(self, input_shape, num_classes, num_domains, hparams, init_step=False, path_for_init=None):
+        super(SAM, self).__init__(input_shape, num_classes, num_domains, hparams)
+
+        self.featurizer = networks.Featurizer(input_shape, self.hparams)
+        self.classifier = networks.Classifier(
+            self.featurizer.n_outputs,
+            num_classes,
+            self.hparams['nonlinear_classifier'])
+
+        self.network = nn.Sequential(self.featurizer, self.classifier)
+
+        ## DiWA load shared initialization ##
+        if path_for_init is not None:
+            if os.path.exists(path_for_init):
+                self.network.load_state_dict(torch.load(path_for_init))
+            else:
+                assert init_step, "Your initialization has not been saved yet"
+
+        ## DiWA choose weights to be optimized ##
+        if not init_step:
+            parameters_to_be_optimized = self.network.parameters()
+        else:
+            # linear probing
+            parameters_to_be_optimized = self.classifier.parameters()
+
+        base_optimizer = torch.optim.SGD
+        self.optimizer = SAMin(
+            parameters_to_be_optimized, 
+            base_optimizer, 
+            lr=self.hparams["lr"], 
+            momentum=0.9
+        )
+
+    def update(self, minibatches, unlabeled=None):
+        all_x = torch.cat([x for x,y in minibatches])
+        all_y = torch.cat([y for x,y in minibatches])
+        
+        # first forward-backward pass
+        self.enable_running_stats()
+        loss = F.cross_entropy(self.predict(all_x), all_y)      # use this loss for any training statistics
+        loss.backward()
+        self.optimizer.first_step(zero_grad=True)
+
+        # second forward-backward pass
+        self.disable_running_stats()
+        F.cross_entropy(self.predict(all_x), all_y).backward()  # make sure to do a full forward pass
+        self.optimizer.second_step(zero_grad=True)
+
+        return {'loss': loss.item()}
+
+    def predict(self, x):
+        return self.network(x)
+
+    def enable_running_stats(self):
+        def _enable(module):
+            if isinstance(module, _BatchNorm) and hasattr(module, "backup_momentum"):
+                module.momentum = module.backup_momentum
+
+        self.network.apply(_enable)
+
+    def disable_running_stats(self):
+        def _disable(module):
+            if isinstance(module, _BatchNorm):
+                module.backup_momentum = module.momentum
+                module.momentum = 0
+
+        self.network.apply(_disable)
+
+#=================================================================================
 
 
 class ERM(Algorithm):
