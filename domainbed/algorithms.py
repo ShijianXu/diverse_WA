@@ -20,7 +20,7 @@ from domainbed.lib.misc import (
     random_pairs_of_minibatches, ParamDict, MovingAverage, l2_between_dicts
 )
 
-from sam import SAMin
+from domainbed.sam import SAMin
 from torch.nn.modules.batchnorm import _BatchNorm
 
 ALGORITHMS = [
