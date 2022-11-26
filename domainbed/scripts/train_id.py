@@ -146,7 +146,7 @@ if __name__ == "__main__":
     N_CLASSES = 100
     N_DOMAINS = 1
     algorithm_class = algorithms.get_algorithm_class(args.algorithm)
-    if args.algorithm == "ERM":
+    if args.algorithm == "ERM" or args.algorithm == "SAM":
         algorithm = algorithm_class(INPUT_SHAPE, N_CLASSES,
             N_DOMAINS, hparams,
             init_step=args.init_step,

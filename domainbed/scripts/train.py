@@ -215,7 +215,7 @@ if __name__ == "__main__":
     print("eval_loader_names: ", eval_loader_names)
 
     algorithm_class = algorithms.get_algorithm_class(args.algorithm)
-    if args.algorithm == "ERM":
+    if args.algorithm == "ERM" or args.algorithm == "SAM":
         algorithm = algorithm_class(dataset.input_shape, dataset.num_classes,
             len(dataset) - len(args.test_envs), hparams,
             init_step=args.init_step,
