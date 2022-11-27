@@ -123,12 +123,19 @@ class SAM(Algorithm):
             # linear probing
             parameters_to_be_optimized = self.classifier.parameters()
 
-        base_optimizer = torch.optim.SGD
+        # base_optimizer = torch.optim.SGD
+        # self.optimizer = SAMin(
+        #     parameters_to_be_optimized, 
+        #     base_optimizer, 
+        #     lr=self.hparams["lr"], 
+        #     momentum=0.9
+        # )
+        base_optimizer = torch.optim.Adam
         self.optimizer = SAMin(
-            parameters_to_be_optimized, 
-            base_optimizer, 
-            lr=self.hparams["lr"], 
-            momentum=0.9
+            parameters_to_be_optimized,
+            base_optimizer,
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams['weight_decay']
         )
 
     def update(self, minibatches, unlabeled=None):
