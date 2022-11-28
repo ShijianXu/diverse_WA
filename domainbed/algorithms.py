@@ -173,6 +173,11 @@ class SAM(Algorithm):
 
         self.network.apply(_disable)
 
+    ## DiWA for saving initialization ##
+    def save_path_for_future_init(self, path_for_init):
+        assert not os.path.exists(path_for_init), "The initialization has already been saved"
+        torch.save(self.network.state_dict(), path_for_init)
+
 #=================================================================================
 
 
