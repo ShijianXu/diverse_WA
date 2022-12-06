@@ -103,7 +103,7 @@ def all_test_env_combinations(n):
             yield [i, j]
 
 def make_args_list(n_trials, algorithms, n_hparams_from, n_hparams, steps,
-    data_dir, task, holdout_fraction, hparams, path_for_init):
+    data_dir, task, holdout_fraction, hparams, path_for_init, sam_rho):
     args_list = []
     for trial_seed in range(n_trials):
         for algorithm in algorithms:
@@ -117,6 +117,7 @@ def make_args_list(n_trials, algorithms, n_hparams_from, n_hparams, steps,
                 train_args['trial_seed'] = trial_seed
                 train_args['path_for_init'] = path_for_init
                 train_args['seed'] = misc.seed_hash(algorithm, hparams_seed, trial_seed)
+                train_args['sam_rho'] = sam_rho
                 if steps is not None:
                     train_args['steps'] = steps
                 if hparams is not None:
@@ -150,7 +151,7 @@ if __name__ == "__main__":
      ## DiWA ##
     parser.add_argument('--path_for_init', type=str, default=None)
     parser.add_argument('--sam_rho', type=float, default=0.05)
-    
+
     args = parser.parse_args()
 
     args_list = make_args_list(
@@ -164,7 +165,8 @@ if __name__ == "__main__":
         holdout_fraction=args.holdout_fraction,
         hparams=args.hparams,
         ## DiWA ##
-        path_for_init=args.path_for_init
+        path_for_init=args.path_for_init,
+        sam_rho = args.sam_rho
     )
 
     jobs = [Job(train_args, args.output_dir) for train_args in args_list]
