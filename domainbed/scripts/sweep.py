@@ -7,12 +7,13 @@ Run sweeps
 """
 python3 -m domainbed.scripts.sweep launch \
        --data_dir=../data \
-       --output_dir=./VLCS_3_sweep_diwa \
+       --output_dir=./PACS_0_sweep_diwa_sam_rho_0_01 \
        --command_launcher local \
-       --datasets VLCS \
-       --test_env 3 \
-       --path_for_init ./VLCS_test_3_init.pth \
-       --algorithms ERM \
+       --datasets PACS \
+       --test_env 0 \
+       --path_for_init ./PACS_test_0_init_sam_rho_0.01.pth \
+       --algorithms SAM \
+       --sam_rho 0.01 \
        --n_hparams 10 \
        --n_trials 1 \
        --skip_confirmation
@@ -173,6 +174,7 @@ if __name__ == "__main__":
      ## DiWA ##
     parser.add_argument('--test_env', type=int, default=None)
     parser.add_argument('--path_for_init', type=str, default=None)
+    parser.add_argument('--sam_rho', type=float, default=0.05)
 
     args = parser.parse_args()
 

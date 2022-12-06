@@ -7,10 +7,11 @@ Run sweeps
 """
 python3 -m domainbed.scripts.sweep_id launch \
        --data_dir=../data \
-       --output_dir=./CIFAR100_sweep_diwa \
+       --output_dir=./CIFAR100_sweep_diwa_sam_rho_0_01 \
        --command_launcher local \
-       --path_for_init ./CIFAR100_init.pth \
-       --algorithms ERM \
+       --path_for_init ./CIFAR100_init_sam_rho_0.01.pth \
+       --algorithms SAM \
+       --sam_rho 0.01 \
        --n_hparams 10 \
        --n_trials 1 \
        --steps 20001 \
@@ -148,7 +149,8 @@ if __name__ == "__main__":
     parser.add_argument('--skip_confirmation', action='store_true')
      ## DiWA ##
     parser.add_argument('--path_for_init', type=str, default=None)
-
+    parser.add_argument('--sam_rho', type=float, default=0.05)
+    
     args = parser.parse_args()
 
     args_list = make_args_list(
