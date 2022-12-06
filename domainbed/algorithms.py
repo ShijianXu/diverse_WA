@@ -98,7 +98,7 @@ class SAM(Algorithm):
     Sharpness-Aware Minimization (SAM)
     """
     
-    def __init__(self, input_shape, num_classes, num_domains, hparams, init_step=False, path_for_init=None):
+    def __init__(self, input_shape, num_classes, num_domains, hparams, rho=0.05, init_step=False, path_for_init=None):
         super(SAM, self).__init__(input_shape, num_classes, num_domains, hparams)
 
         self.featurizer = networks.Featurizer(input_shape, self.hparams)
@@ -134,6 +134,7 @@ class SAM(Algorithm):
         self.optimizer = SAMin(
             parameters_to_be_optimized,
             base_optimizer,
+            rho=rho,
             lr=self.hparams["lr"],
             weight_decay=self.hparams['weight_decay']
         )

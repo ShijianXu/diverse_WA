@@ -2,6 +2,28 @@
 # Diverse Weight Averaging Training for in-distribution data, e.g., CIFAR100
 
 
+"""
+# pretrain
+python3 -m domainbed.scripts.train_id \
+       --data_dir=../data \
+       --output_dir=./CIFAR100_pretrain_sam_rho_0_01 \
+       --algorithm SAM \
+       --sam_rho 0.01 \
+       --checkpoint_freq 100 \
+       --init_step \
+       --path_for_init ./CIFAR100_init_sam_rho_0.01.pth
+
+# baseline continue train
+python3 -m domainbed.scripts.train_id \
+       --data_dir=../data \
+       --output_dir=./CIFAR100_baseline_sam_adam \
+       --algorithm SAM \
+       --sam_rho 0.01 \
+       --checkpoint_freq 100 \
+       --path_for_init ./CIFAR100_init_sam_adam.pth \
+       --steps 20001
+"""
+
 import argparse
 import collections
 import json
@@ -55,6 +77,7 @@ if __name__ == "__main__":
     ## DiWA ##
     parser.add_argument('--init_step', action='store_true')
     parser.add_argument('--path_for_init', type=str, default=None)
+    parser.add_argument('--sam_rho', type=float, default=0.05)
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -146,9 +169,15 @@ if __name__ == "__main__":
     N_CLASSES = 100
     N_DOMAINS = 1
     algorithm_class = algorithms.get_algorithm_class(args.algorithm)
-    if args.algorithm == "ERM" or args.algorithm == "SAM":
+    if args.algorithm == "ERM":
         algorithm = algorithm_class(INPUT_SHAPE, N_CLASSES,
             N_DOMAINS, hparams,
+            init_step=args.init_step,
+            path_for_init=args.path_for_init)
+    elif args.algorithm == "SAM":
+        algorithm = algorithm_class(INPUT_SHAPE, N_CLASSES,
+            N_DOMAINS, hparams,
+            rho=args.sam_rho,
             init_step=args.init_step,
             path_for_init=args.path_for_init)
     else:

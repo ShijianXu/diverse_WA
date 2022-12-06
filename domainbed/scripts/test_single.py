@@ -1,6 +1,8 @@
 ## code used to load and test a single model
 
 """
+# Support both Domainbed datasets and CIFAR100
+
 python3 -m domainbed.scripts.test_single \
        --data_dir=../data \
        --model_path=./model_best.pkl \
