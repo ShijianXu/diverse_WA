@@ -4,22 +4,24 @@
 # pretrain
 python3 -m domainbed.scripts.train \
        --data_dir=../data \
-       --output_dir=./VLCS_pretrain \
-       --algorithm ERM \
-       --dataset VLCS \
-       --test_env 1 \
+       --output_dir=./PACS_0_pretrain_sam_rho_0_01 \
+       --algorithm SAM \
+       --sam_rho 0.01 \
+       --dataset PACS \
+       --test_env 0 \
        --init_step \
-       --path_for_init ./VLCS_test_1_init.pth \
+       --path_for_init ./PACS_test_0_init_sam_rho_0.01.pth \
        --steps 0
 
 # baseline continue train
 python3 -m domainbed.scripts.train \
        --data_dir=../data \
-       --output_dir=./VLCS_baseline \
-       --algorithm ERM \
-       --dataset VLCS \
-       --test_env 1 \
-       --path_for_init ./VLCS_test_1_init.pth \
+       --output_dir=./PACS_0_baseline_sam_rho_0_01 \
+       --algorithm SAM \
+       --sam_rho 0.01 \
+       --dataset PACS \
+       --test_env 0 \
+       --path_for_init ./PACS_test_0_init_sam_rho_0.01.pth \
        --steps 5001
 """
 
@@ -76,6 +78,7 @@ if __name__ == "__main__":
     ## DiWA ##
     parser.add_argument('--init_step', action='store_true')
     parser.add_argument('--path_for_init', type=str, default=None)
+    parser.add_argument('--sam_rho', type=float, default=0.05)
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -215,9 +218,15 @@ if __name__ == "__main__":
     print("eval_loader_names: ", eval_loader_names)
 
     algorithm_class = algorithms.get_algorithm_class(args.algorithm)
-    if args.algorithm == "ERM" or args.algorithm == "SAM":
+    if args.algorithm == "ERM":
         algorithm = algorithm_class(dataset.input_shape, dataset.num_classes,
             len(dataset) - len(args.test_envs), hparams,
+            init_step=args.init_step,
+            path_for_init=args.path_for_init)
+    elif args.algorithm == "SAM":
+        algorithm = algorithm_class(dataset.input_shape, dataset.num_classes,
+            len(dataset) - len(args.test_envs), hparams,
+            rho=args.sam_rho,
             init_step=args.init_step,
             path_for_init=args.path_for_init)
     else:
