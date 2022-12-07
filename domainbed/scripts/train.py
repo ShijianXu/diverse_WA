@@ -10,7 +10,7 @@ python3 -m domainbed.scripts.train \
        --dataset PACS \
        --test_env 0 \
        --init_step \
-       --path_for_init ./PACS_test_0_init_sam_rho_0.01.pth \
+       --path_for_init /scratch/izar/sxu/PACS_test_0_init_sam_rho_0.01.pth \
        --steps 0
 
 # baseline continue train
@@ -21,7 +21,7 @@ python3 -m domainbed.scripts.train \
        --sam_rho 0.01 \
        --dataset PACS \
        --test_env 0 \
-       --path_for_init ./PACS_test_0_init_sam_rho_0.01.pth \
+       --path_for_init /scratch/izar/sxu/PACS_test_0_init_sam_rho_0.01.pth \
        --steps 5001
 """
 

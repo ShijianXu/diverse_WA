@@ -11,7 +11,7 @@ python3 -m domainbed.scripts.train_id \
        --sam_rho 0.01 \
        --checkpoint_freq 100 \
        --init_step \
-       --path_for_init ./CIFAR100_init_sam_rho_0.01.pth
+       --path_for_init /scratch/izar/sxu/CIFAR100_init_sam_rho_0.01.pth
 
 # baseline continue train
 python3 -m domainbed.scripts.train_id \
@@ -20,7 +20,7 @@ python3 -m domainbed.scripts.train_id \
        --algorithm SAM \
        --sam_rho 0.01 \
        --checkpoint_freq 100 \
-       --path_for_init ./CIFAR100_init_sam_adam.pth \
+       --path_for_init /scratch/izar/sxu/CIFAR100_init_sam_adam.pth \
        --steps 20001
 """
 
