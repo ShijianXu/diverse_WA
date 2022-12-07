@@ -7,7 +7,7 @@ Run sweeps
 """
 python3 -m domainbed.scripts.sweep_diverse launch \
        --data_dir=../data \
-       --output_dir=./PACS_0_sweep_diwa_sam_rho_0_01 \
+       --output_dir=./PACS_0_sweep_grad_sam \
        --command_launcher local \
        --datasets PACS \
        --test_env 0 \
