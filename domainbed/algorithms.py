@@ -26,6 +26,7 @@ from torch.nn.modules.batchnorm import _BatchNorm
 ALGORITHMS = [
     # Sharpness-Aware Minimization
     'SAM',
+    'SAM_2',
     'ERM',
     # ERM for 2 models
     'ERM_2',
@@ -142,7 +143,7 @@ class SAM(Algorithm):
     def update(self, minibatches, unlabeled=None):
         all_x = torch.cat([x for x,y in minibatches])
         all_y = torch.cat([y for x,y in minibatches])
-        
+
         # first forward-backward pass
         self.enable_running_stats()
         loss = F.cross_entropy(self.predict(all_x), all_y)      # use this loss for any training statistics
@@ -178,6 +179,147 @@ class SAM(Algorithm):
     def save_path_for_future_init(self, path_for_init):
         assert not os.path.exists(path_for_init), "The initialization has already been saved"
         torch.save(self.network.state_dict(), path_for_init)
+
+
+class SAM_2(torch.nn.Module):
+    """
+    Sharpness-Aware Minimization (SAM) for 2 models (SAM_2)
+    """
+
+    def __init__(self, input_shape, num_classes, num_domains, hparams1, hparams2, rho=0.05, init_step=False, path_for_init=None, device='cpu'):
+        super(SAM_2, self).__init__()
+
+        self.hparams1 = hparams1
+        self.hparams2 = hparams2
+
+        # model_1
+        self.featurizer1 = networks.Featurizer(input_shape, self.hparams1)
+        self.classifier1 = networks.Classifier(
+            self.featurizer1.n_outputs,
+            num_classes,
+            self.hparams1['nonlinear_classifier'])
+        self.network1 = nn.Sequential(self.featurizer1, self.classifier1)
+
+        # model_2
+        self.featurizer2 = networks.Featurizer(input_shape, self.hparams2)
+        self.classifier2 = networks.Classifier(
+            self.featurizer2.n_outputs,
+            num_classes,
+            self.hparams2['nonlinear_classifier'])
+        self.network2 = nn.Sequential(self.featurizer2, self.classifier2)
+
+
+        ## DiWA load shared initialization ##
+        if path_for_init is not None:
+            if os.path.exists(path_for_init):
+                self.network1.load_state_dict(torch.load(path_for_init, map_location=torch.device(device)))
+                self.network2.load_state_dict(torch.load(path_for_init, map_location=torch.device(device)))
+            else:
+                assert init_step, "Your initialization has not been saved yet"
+
+        ## DiWA choose weights to be optimized ##
+        if not init_step:
+            parameters_to_be_optimized1 = self.network1.parameters()
+            parameters_to_be_optimized2 = self.network2.parameters()
+        else:
+            raise NotImplementedError
+
+        # optimizer 1
+        base_optimizer1 = torch.optim.Adam
+        self.optimizer1 = SAMin(
+            parameters_to_be_optimized1,
+            base_optimizer1,
+            rho=rho,
+            lr=self.hparams1["lr"],
+            weight_decay=self.hparams1['weight_decay']
+        )
+
+        # optimizer 2
+        base_optimizer2 = torch.optim.Adam
+        self.optimizer2 = SAMin(
+            parameters_to_be_optimized2,
+            base_optimizer2,
+            rho=rho,
+            lr=self.hparams2["lr"],
+            weight_decay=self.hparams2['weight_decay']
+        )
+
+        # cosine similarity
+        self.cossim = torch.nn.CosineSimilarity(dim=1, eps=1e-6)
+
+    def update(self, minibatches, unlabeled=None):
+        all_x = torch.cat([x for x,y in minibatches])
+        all_y = torch.cat([y for x,y in minibatches])
+
+        #---------- first forward-backward pass ----------
+        self.enable_running_stats()
+        pred1, pred2 = self.predict(all_x)
+        grad_sim = self.gradient_diverse(pred1, self.feat1, pred2, self.feat2)
+        loss1 = F.cross_entropy(pred1, all_y) + grad_sim
+        loss2 = F.cross_entropy(pred2, all_y) + grad_sim
+
+        ## updata model 1
+        loss1.backward(retain_graph=True)
+        self.optimizer1.first_step(zero_grad=True)
+        ## update model 2
+        loss2.backward()
+        self.optimizer2.first_step(zero_grad=True)
+
+        #---------- second forward-backward pass ----------
+        self.disable_running_stats()
+        pred1, pred2 = self.predict(all_x)
+        sec_grad_sim = self.gradient_diverse(pred1, self.feat1, pred2, self.feat2)
+        sec_loss1 = F.cross_entropy(pred1, all_y) + sec_grad_sim
+        sec_loss2 = F.cross_entropy(pred2, all_y) + sec_grad_sim
+
+        ## updata model 1
+        sec_loss1.backward(retain_graph=True)
+        self.optimizer1.second_step(zero_grad=True)
+        ## update model 2
+        sec_loss2.backward()
+        self.optimizer2.second_step(zero_grad=True)
+
+        return {'loss1': loss1.item(), 'loss2': loss2.item(), 'grad_loss': grad_sim.item()}
+        # return {'loss1': loss1.item(), 'loss2': loss2.item()}
+
+    def predict(self, x):
+        self.feat1 = self.featurizer1(x)
+        pred1 = self.classifier1(self.feat1)
+
+        self.feat2 = self.featurizer2(x)
+        pred2 = self.classifier2(self.feat2)
+        return pred1, pred2
+
+    def enable_running_stats(self):
+        def _enable(module):
+            if isinstance(module, _BatchNorm) and hasattr(module, "backup_momentum"):
+                module.momentum = module.backup_momentum
+
+        self.network.apply(_enable)
+
+    def disable_running_stats(self):
+        def _disable(module):
+            if isinstance(module, _BatchNorm):
+                module.backup_momentum = module.momentum
+                module.momentum = 0
+
+        self.network.apply(_disable)
+
+    def gradient_diverse(self, pred1, feat1, pred2, feat2):
+        grad1 = torch.autograd.grad(pred1, feat1, grad_outputs=torch.ones_like(pred1), create_graph=True, retain_graph=True)[0]
+        grad2 = torch.autograd.grad(pred2, feat2, grad_outputs=torch.ones_like(pred2), create_graph=True, retain_graph=True)[0]
+
+        grad1 = grad1.reshape((grad1.shape[0], -1))
+        grad2 = grad2.reshape((grad2.shape[0], -1))
+
+        # grad_diff = torch.linalg.vector_norm(grad1-grad2)
+        # grad_diff_normed = grad_diff / torch.linalg.vector_norm(grad1)
+
+        sim = torch.mean(self.cossim(grad1, grad2) ** 2)
+        # sim = 1 - grad_diff_normed
+
+        return sim
+
 
 #=================================================================================
 

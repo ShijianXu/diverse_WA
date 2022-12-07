@@ -7,12 +7,13 @@ Run sweeps
 """
 python3 -m domainbed.scripts.sweep_diverse launch \
        --data_dir=../data \
-       --output_dir=./PACS_0_sweep_output_naive \
+       --output_dir=./PACS_0_sweep_diwa_sam_rho_0_01 \
        --command_launcher local \
        --datasets PACS \
        --test_env 0 \
-       --path_for_init ./PACS_test_0_init.pth \
-       --algorithms ERM_2 \
+       --path_for_init /scratch/izar/sxu/PACS_test_0_init_sam_rho_0.01.pth \
+       --algorithms SAM_2 \
+       --sam_rho 0.01 \
        --n_hparams 10 \
        --n_trials 1 \
        --skip_confirmation
@@ -114,7 +115,7 @@ def all_test_env_combinations(n):
 
 
 def make_args_list(n_trials, dataset_names, algorithms, n_hparams_from, n_hparams, steps,
-    data_dir, task, holdout_fraction, single_test_envs, hparams, force_test_env, path_for_init):
+    data_dir, task, holdout_fraction, single_test_envs, hparams, force_test_env, path_for_init, sam_rho):
     args_list = []
     for trial_seed in range(n_trials):
         for dataset in dataset_names:
@@ -145,6 +146,9 @@ def make_args_list(n_trials, dataset_names, algorithms, n_hparams_from, n_hparam
                         train_args['path_for_init'] = path_for_init
                         train_args['seed'] = misc.seed_hash(dataset,
                             algorithm, test_envs, hparams_seed, trial_seed)
+
+                        train_args['sam_rho'] = sam_rho
+
                         if steps is not None:
                             train_args['steps'] = steps
                         if hparams is not None:
@@ -182,6 +186,7 @@ if __name__ == "__main__":
      ## DiWA ##
     parser.add_argument('--test_env', type=int, default=None)
     parser.add_argument('--path_for_init', type=str, default=None)
+    parser.add_argument('--sam_rho', type=float, default=0.05)
 
     args = parser.parse_args()
 
@@ -200,7 +205,8 @@ if __name__ == "__main__":
         hparams=args.hparams,
         ## DiWA ##
         force_test_env=args.test_env,
-        path_for_init=args.path_for_init
+        path_for_init=args.path_for_init,
+        sam_rho = args.sam_rho
     )
 
     jobs = [Job(train_args, args.output_dir) for train_args in args_list]
