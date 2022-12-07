@@ -295,7 +295,8 @@ class SAM_2(torch.nn.Module):
             if isinstance(module, _BatchNorm) and hasattr(module, "backup_momentum"):
                 module.momentum = module.backup_momentum
 
-        self.network.apply(_enable)
+        self.network1.apply(_enable)
+        self.network2.apply(_enable)
 
     def disable_running_stats(self):
         def _disable(module):
@@ -303,7 +304,8 @@ class SAM_2(torch.nn.Module):
                 module.backup_momentum = module.momentum
                 module.momentum = 0
 
-        self.network.apply(_disable)
+        self.network1.apply(_disable)
+        self.network2.apply(_disable)
 
     def gradient_diverse(self, pred1, feat1, pred2, feat2):
         grad1 = torch.autograd.grad(pred1, feat1, grad_outputs=torch.ones_like(pred1), create_graph=True, retain_graph=True)[0]
