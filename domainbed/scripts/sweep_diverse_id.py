@@ -9,8 +9,9 @@ python3 -m domainbed.scripts.sweep_diverse_id launch \
         --data_dir=../data \
         --output_dir=./CIFAR100_sweep_grad_loss \
         --command_launcher local \
-        --path_for_init ./CIFAR100_init.pth \
-        --algorithms ERM_2 \
+        --path_for_init /scratch/izar/sxu/CIFAR100_init_sam_rho_0.01.pth \
+        --algorithms SAM_2 \
+        --sam_rho 0.01 \
         --n_hparams 10 \
         --n_trials 1 \
         --steps 20001 \
@@ -106,7 +107,7 @@ def all_test_env_combinations(n):
 
 
 def make_args_list(n_trials, algorithms, n_hparams_from, n_hparams, steps,
-    data_dir, task, holdout_fraction, hparams, path_for_init):
+    data_dir, task, holdout_fraction, hparams, path_for_init, sam_rho):
     args_list = []
     for trial_seed in range(n_trials):
         for algorithm in algorithms:
@@ -124,6 +125,9 @@ def make_args_list(n_trials, algorithms, n_hparams_from, n_hparams, steps,
                 train_args['trial_seed'] = trial_seed
                 train_args['path_for_init'] = path_for_init
                 train_args['seed'] = misc.seed_hash(algorithm, hparams_seed, trial_seed)
+
+                train_args['sam_rho'] = sam_rho
+
                 if steps is not None:
                     train_args['steps'] = steps
                 if hparams is not None:
@@ -157,6 +161,7 @@ if __name__ == "__main__":
     parser.add_argument('--skip_confirmation', action='store_true')
      ## DiWA ##
     parser.add_argument('--path_for_init', type=str, default=None)
+    parser.add_argument('--sam_rho', type=float, default=0.05)
 
     args = parser.parse_args()
 
@@ -172,7 +177,8 @@ if __name__ == "__main__":
         holdout_fraction=args.holdout_fraction,
         hparams=args.hparams,
         ## DiWA ##
-        path_for_init=args.path_for_init
+        path_for_init=args.path_for_init,
+        sam_rho = args.sam_rho
     )
 
     jobs = [Job(train_args, args.output_dir) for train_args in args_list]

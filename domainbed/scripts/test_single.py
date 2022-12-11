@@ -8,6 +8,13 @@ python3 -m domainbed.scripts.test_single \
        --model_path=./model_best.pkl \
        --dataset CIFAR100 \
        --test_env 0
+
+
+python3 -m domainbed.scripts.test_single \
+       --data_dir=../data \
+       --model_path=/scratch/izar/sxu/VLCS_1_baseline_sam_adam/model_best.pkl \
+       --dataset VLCS \
+       --test_env 1
 """
 
 

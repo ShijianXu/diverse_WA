@@ -54,6 +54,7 @@ if __name__ == "__main__":
     ## DiWA ##
     parser.add_argument('--init_step', action='store_true')
     parser.add_argument('--path_for_init', type=str, default=None)
+    parser.add_argument('--sam_rho', type=float, default=0.05)
     args = parser.parse_args()
 
     # If we ever want to implement checkpointing, just persist these values
@@ -163,6 +164,13 @@ if __name__ == "__main__":
     if args.algorithm == "ERM_2":
         algorithm = algorithm_class(INPUT_SHAPE, N_CLASSES,
             N_DOMAINS, hparams_1, hparams_2,
+            init_step=args.init_step,
+            path_for_init=args.path_for_init,
+            device=device)
+    elif args.algorithm == "SAM_2":
+        algorithm = algorithm_class(INPUT_SHAPE, N_CLASSES,
+            N_DOMAINS, hparams_1, hparams_2,
+            rho=args.sam_rho,
             init_step=args.init_step,
             path_for_init=args.path_for_init,
             device=device)

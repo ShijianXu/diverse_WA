@@ -1,7 +1,7 @@
 """
 python3 -m domainbed.scripts.diwa_id \
        --data_dir=../data \
-       --output_dir=./CIFAR100_sweep_diwa \
+       --output_dir=/scratch/izar/sxu/CIFAR100_sweep_diwa \
        --weight_selection uniform \
        --trial_seed -1
 """
