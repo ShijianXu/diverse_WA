@@ -120,7 +120,9 @@ class SingleEnvironmentDatasets():
         for i in range(len(environments)):
             print(f"env_{i}:", environments[i])
 
-        environment = environments[test_env]
+        print(test_env)
+        assert len(test_env)==1
+        environment = environments[test_env[0]]
 
 
         direct = os.path.join(root, environment)
