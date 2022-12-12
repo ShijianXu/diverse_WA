@@ -1,4 +1,4 @@
-
+import torch
 import copy
 import torch.nn as nn
 from domainbed import networks, algorithms
@@ -13,6 +13,13 @@ class ERM(algorithms.ERM):
         )
         self.num_classes = num_classes
         self.network = nn.Sequential(self.featurizer, self.classifier)
+
+        parameters_to_be_optimized = self.network.parameters()
+        self.optimizer = torch.optim.Adam(
+            parameters_to_be_optimized,
+            lr=self.hparams["lr"],
+            weight_decay=self.hparams['weight_decay']
+        )
 
 
 class DiWA(algorithms.ERM):
