@@ -12,7 +12,7 @@ python3 -m domainbed.scripts.few_shot_adapt \
        --model_path /scratch/izar/sxu/PACS_0_baseline_sam_rho_0_01/model_best.pkl \
        --steps 100
 
-python3 -m domainbed.scripts.train \
+python3 -m domainbed.scripts.few_shot_adapt \
        --data_dir=../data \
        --output_dir=./PACS_0_10_shot_sam_rho_0_01_adapt \
        --algorithm SAM \
@@ -32,23 +32,21 @@ import os
 import random
 import sys
 import time
-import uuid
 
 import numpy as np
 import PIL
 import torch
 import torchvision
 import torch.utils.data
-from torchvision.utils import save_image
 
 from domainbed import few_shot_datasets
 from domainbed import hparams_registry
-from domainbed import algorithms, algorithms_inference
+from domainbed import algorithms_inference
 from domainbed.lib import misc
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Domain generalization')
+    parser = argparse.ArgumentParser(description='Domain Adaptation')
     parser.add_argument('--data_dir', type=str)
     parser.add_argument('--dataset', type=str, default="RotatedMNIST")
     parser.add_argument('--algorithm', type=str, default="ERM")
@@ -69,13 +67,9 @@ if __name__ == "__main__":
         help='Checkpoint every N steps. Default is dataset-dependent.')
     parser.add_argument('--test_envs', type=int, nargs='+', default=[0])
     parser.add_argument('--output_dir', type=str, default="train_output")
-    parser.add_argument('--holdout_fraction', type=float, default=0.2)
-    parser.add_argument('--uda_holdout_fraction', type=float, default=0,
-        help="For domain adaptation, % of test to use unlabeled for training.")
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     ## DiWA ##
-    parser.add_argument('--init_step', action='store_true')
     parser.add_argument('--model_path', type=str)
     parser.add_argument('--sam_rho', type=float, default=0.05)
     parser.add_argument('--k_shot', type=int, default=10)
@@ -145,7 +139,6 @@ if __name__ == "__main__":
 
     # load checkpoint before testing
     save_dict = torch.load(args.model_path, map_location=torch.device(device))
-    train_args = save_dict["args"]
     
     if args.algorithm == "ERM":
         algorithm = algorithms_inference.ERM(
@@ -161,11 +154,11 @@ if __name__ == "__main__":
     algorithm.to(device)
 
     train_minibatches_iterator = zip(train_loader)
-    checkpoint_vals = collections.defaultdict(lambda: [])
+    # checkpoint_vals = collections.defaultdict(lambda: [])
 
     n_steps = args.steps
     print("==> n_steps: ", n_steps)
-    checkpoint_freq = args.checkpoint_freq
+    # checkpoint_freq = args.checkpoint_freq
 
     def save_checkpoint(filename, results=None):
         if args.skip_model_save:
