@@ -174,7 +174,6 @@ if __name__ == "__main__":
             "args": vars(args),
             "model_input_shape": dataset.input_shape,
             "model_num_classes": dataset.num_classes,
-            "model_num_domains": len(dataset) - len(args.test_envs),
             "model_hparams": hparams,
             "model_dict": algorithm.state_dict()
         }
