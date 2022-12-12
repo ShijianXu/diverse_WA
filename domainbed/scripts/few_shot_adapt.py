@@ -9,7 +9,7 @@ python3 -m domainbed.scripts.few_shot_adapt \
        --dataset PACS \
        --test_env 0 \
        --k_shot 10 \
-       --path_for_init /scratch/izar/sxu/PACS_0_baseline_sam_rho_0_01/model_best.pkl \
+       --model_path /scratch/izar/sxu/PACS_0_baseline_sam_rho_0_01/model_best.pkl \
        --steps 100
 
 python3 -m domainbed.scripts.train \
@@ -20,7 +20,7 @@ python3 -m domainbed.scripts.train \
        --dataset PACS \
        --test_env 0 \
        --k_shot 10 \
-       --path_for_init /scratch/izar/sxu/PACS_test_0_init_sam_rho_0.01.pth \
+       --model_path /scratch/izar/sxu/PACS_test_0_init_sam_rho_0.01.pth \
        --steps 100
 """
 
@@ -43,7 +43,7 @@ from torchvision.utils import save_image
 
 from domainbed import few_shot_datasets
 from domainbed import hparams_registry
-from domainbed import algorithms
+from domainbed import algorithms, algorithms_inference
 from domainbed.lib import misc
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
 
@@ -76,7 +76,7 @@ if __name__ == "__main__":
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     ## DiWA ##
     parser.add_argument('--init_step', action='store_true')
-    parser.add_argument('--path_for_init', type=str, default=None)
+    parser.add_argument('--model_path', type=str)
     parser.add_argument('--sam_rho', type=float, default=0.05)
     parser.add_argument('--k_shot', type=int, default=10)
     args = parser.parse_args()
@@ -84,7 +84,6 @@ if __name__ == "__main__":
     # If we ever want to implement checkpointing, just persist these values
     # every once in a while, and then load them from disk here.
     start_step = 0
-    algorithm_dict = None
 
     os.makedirs(args.output_dir, exist_ok=True)
     sys.stdout = misc.Tee(os.path.join(args.output_dir, 'out.txt'))
@@ -144,27 +143,21 @@ if __name__ == "__main__":
         num_workers=4
     )
 
-    algorithm_class = algorithms.get_algorithm_class(args.algorithm)
+    # load checkpoint before testing
+    save_dict = torch.load(args.model_path, map_location=torch.device(device))
+    train_args = save_dict["args"]
+    
     if args.algorithm == "ERM":
-        algorithm = algorithm_class(dataset.input_shape, dataset.num_classes,
+        algorithm = algorithms_inference.ERM(
+            dataset.input_shape,
+            dataset.num_classes,
             num_domains=1, 
-            hparams=hparams,
-            init_step=args.init_step,
-            path_for_init=args.path_for_init)
-    elif args.algorithm == "SAM":
-        algorithm = algorithm_class(dataset.input_shape, dataset.num_classes,
-            num_domains=1, 
-            hparams=hparams,
-            rho=args.sam_rho,
-            init_step=args.init_step,
-            path_for_init=args.path_for_init)
+            hparams=save_dict["model_hparams"]
+        )
     else:
-        algorithm = algorithm_class(dataset.input_shape, dataset.num_classes,
-            num_domains=1, hparams=hparams)
+        raise NotImplementedError
 
-    if algorithm_dict is not None:
-        algorithm.load_state_dict(algorithm_dict)
-
+    algorithm.load_state_dict(save_dict["model_dict"], strict=False)
     algorithm.to(device)
 
     train_minibatches_iterator = zip(train_loader)
@@ -193,13 +186,16 @@ if __name__ == "__main__":
     best_score = -float("inf")
     last_results_keys = None
 
+
     # test before adaptation
     print("Testing ...")
+    algorithm.eval()
     acc = misc.accuracy(algorithm, eval_loader, None, device)
     print("Before few shot adaptation, the accuracy is: ", acc)
 
     # training
     print("Training ...")
+    algorithm.train()
     for step in range(start_step, n_steps):
         step_start_time = time.time()
         minibatches_device = [(x.to(device), y.to(device))
@@ -210,6 +206,7 @@ if __name__ == "__main__":
 
     # test 
     print("Testing again ...")
+    algorithm.eval()
     acc = misc.accuracy(algorithm, eval_loader, None, device)
     print("After few shot adaptation, the accuracy is: ", acc)
 
