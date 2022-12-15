@@ -21,6 +21,12 @@ class ERM(algorithms.ERM):
             weight_decay=self.hparams['weight_decay']
         )
 
+class SAM(algorithms.SAM):
+    def __init__(self, input_shape, num_classes, num_domains, hparams, rho=0.05, init_step=False, path_for_init=None):
+        super().__init__(input_shape, num_classes, num_domains, hparams, rho, init_step, path_for_init)
+
+        pass
+    
 
 class DiWA(algorithms.ERM):
 

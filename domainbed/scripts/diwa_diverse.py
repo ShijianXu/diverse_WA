@@ -1,7 +1,7 @@
 """
 python3 -m domainbed.scripts.diwa_diverse \
        --data_dir=../data \
-       --output_dir=/PACS_3_sweep_output_grad_graph \
+       --output_dir=/scratch/izar/sxu/PACS_3_sweep_output_grad_graph \
        --dataset PACS \
        --test_env 3 \
        --weight_selection uniform \

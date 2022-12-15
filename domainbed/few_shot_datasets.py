@@ -6,6 +6,9 @@ import numpy as np
 from PIL import Image, ImageFile
 from torchvision import transforms
 from torch.utils.data import Dataset
+import torchvision
+
+from domainbed import mnist_m
 
 #========================================
 #                 utils
@@ -173,3 +176,51 @@ class PACS(SingleEnvironmentDatasets):
     def __init__(self, root, test_envs, k_shot=10):
         self.dir = os.path.join(root, "PACS/")
         super().__init__(self.dir, test_envs, k_shot)
+
+
+## Datasets for MNIST and MNIST-M
+
+def get_dataset(root, data_name, imsize, train=True):
+    if data_name == 'MNIST':
+        if train:
+            print("Return MNIST train.")
+            return torchvision.datasets.MNIST(
+                root=root, train=True, download=True,
+                transform=transforms.Compose([
+                    transforms.Resize(imsize),
+                    transforms.Grayscale(3),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]))
+        else:
+            print("Return MNIST test.")
+            return torchvision.datasets.MNIST(
+                root=root, train=False, download=True,
+                transform=transforms.Compose([
+                    transforms.Resize(imsize),
+                    transforms.Grayscale(3),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]))
+    elif data_name == 'MNISTM':
+        if train:
+            print("Return MNIST-M train.")
+            return mnist_m.MNIST_M(
+                root=root+'/mnist_m', train=True,
+                transform=transforms.Compose([
+                    transforms.Resize(imsize),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]))
+        else:
+            print("Return MNIST-M test.")
+            return mnist_m.MNIST_M(
+                root=root+'/mnist_m', train=False,
+                transform=transforms.Compose([
+                    transforms.Resize(imsize),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]))
+
+    else:
+        raise NotImplementedError
