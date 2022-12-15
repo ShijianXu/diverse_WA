@@ -38,7 +38,9 @@ if __name__ == "__main__":
     parser.add_argument('--check_freq', type=int, default=10000)
     parser.add_argument('--output_dir', type=str, default="MNIST_2_MNISTM")
     parser.add_argument('--seed', type=int, default=0, help='Seed for everything else')
-
+    parser.add_argument('--skip_model_save', action='store_true')
+    parser.add_argument('--save_model_every_checkpoint', action='store_true')
+    parser.add_argument('--sam_rho', type=float, default=0.05)
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -51,8 +53,9 @@ if __name__ == "__main__":
 
     hparams = {}
     hparams['lr'] = 5e-4
-    hparams['rho'] = 0.05
+    hparams['rho'] = args.sam_rho
     hparams['weight_decay'] = 5e-4
+    hparams['batch_size'] = 64
     
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -76,13 +79,13 @@ if __name__ == "__main__":
     train_loader = InfiniteDataLoader(
         dataset=train_dataset,
         weights=None,
-        batch_size=64,
-        num_workers=4)
+        batch_size=hparams['batch_size'],
+        num_workers=1)
 
     eval_loader = FastDataLoader(
         dataset=test_dataset,
-        batch_size=64,
-        num_workers=4)
+        batch_size=hparams['batch_size'],
+        num_workers=1)
     
     adaptor = Adaptor(channels=3, num_classes=10, hparams=hparams, opt_name=args.opt_name)
 
@@ -119,7 +122,7 @@ if __name__ == "__main__":
             for x,y in next(train_minibatches_iterator)]
 
         # update
-        step_vals = adaptor.update(minibatches_device, None)
+        step_vals = adaptor.update(minibatches_device)
         checkpoint_vals['step_time'].append(time.time() - step_start_time)
 
         for key, val in step_vals.items():

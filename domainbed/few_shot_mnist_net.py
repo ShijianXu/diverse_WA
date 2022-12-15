@@ -38,6 +38,7 @@ class Adaptor(torch.nn.Module):
         self.channels = channels
         self.num_classes = num_classes
         self.classifier = Classifier(self.channels, self.num_classes)
+        self.hparams = hparams
         self.opt_name = opt_name
 
         if self.opt_name == 'Adam':
@@ -92,7 +93,7 @@ class Adaptor(torch.nn.Module):
             if isinstance(module, _BatchNorm) and hasattr(module, "backup_momentum"):
                 module.momentum = module.backup_momentum
 
-        self.network.apply(_enable)
+        self.classifier.apply(_enable)
 
     def disable_running_stats(self):
         def _disable(module):
@@ -100,7 +101,7 @@ class Adaptor(torch.nn.Module):
                 module.backup_momentum = module.momentum
                 module.momentum = 0
 
-        self.network.apply(_disable)
+        self.classifier.apply(_disable)
 
 
 if __name__ == '__main__':

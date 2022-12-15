@@ -8,3 +8,4 @@ domainbed/lib/__pycache__/*
 rsync.sh
 *.pth
 *.pkl
+mnist_pretrain/
