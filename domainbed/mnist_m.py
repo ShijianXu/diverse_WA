@@ -34,31 +34,45 @@ class MNIST_M(torch.utils.data.Dataset):
 		return image, label
 
 
+class FewShotMNIST_M(torch.utils.data.Dataset):
+	def __init__(self, root, train=True, k_shot=10, transform=None):
+		super().__init__()
+
+		self.transform = transform
+
+		if train:
+			self.image_dir = os.path.join(root, 'mnist_m_train')
+		else:
+			self.image_dir = os.path.join(root, 'mnist_m_test')
+
+		self.samples = []
+		for i in range(10):
+			label_i_file = os.path.join(root, f"mnist_m_train_label_{i}.txt")
+			with open(label_i_file, "r") as fp:
+				content = fp.readlines()
+
+			mapping = list(map(lambda x: (x[0], int(x[1])), [c.strip().split() for c in content]))
+
+			np.random.shuffle(mapping)
+			self.samples.extend(mapping[:k_shot])
+
+	def __len__(self):
+		return len(self.samples)
+
+	def __getitem__(self, index):
+		image, label = self.samples[index]
+		image = os.path.join(self.image_dir, image)
+		
+		assert self.transform is not None
+		image = self.transform(Image.open(image).convert('RGB'))
+		return image, label
+
+
 if __name__ == '__main__':
-	root_dir = '../data/mnist_m'
-	batch_size = 10
-	composed_transform = transforms.Compose([transforms.Resize((224,224)),transforms.ToTensor()])
-	train_dataset = MNIST_M(root=root_dir, train=True, transform=composed_transform)
-	test_dataset = MNIST_M(root=root_dir, train=False, transform=composed_transform)
-
-	print('Size of train dataset: %d' % len(train_dataset))
-	print('Size of test dataset: %d' % len(test_dataset))
-
-	train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
-	test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
-
-	def imshow(img):
-		npimg = img.numpy()
-		plt.imshow(np.transpose(npimg, (1, 2, 0)))
-		# plt.show()
-
-	train_dataiter = iter(train_loader)
-	train_images, train_labels = train_dataiter.next()
-	print("Train images", train_images)
-	print("Train images", train_labels)
-	imshow(torchvision.utils.make_grid(train_images))
-
-	test_dataiter = iter(test_loader)
-	test_images, test_labels = test_dataiter.next()
-	print("Test images", test_labels)
-	imshow(torchvision.utils.make_grid(test_images))
+	root_dir = '/Users/xushijian/Desktop/xushijian/OOD/data/mnist_m'
+	dataset = FewShotMNIST_M(root_dir, True, k_shot=10,
+                transform=transforms.Compose([
+                    transforms.Resize(64),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]))

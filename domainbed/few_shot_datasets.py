@@ -180,7 +180,7 @@ class PACS(SingleEnvironmentDatasets):
 
 ## Datasets for MNIST and MNIST-M
 
-def get_dataset(root, data_name, imsize, train=True):
+def get_dataset(root, data_name, imsize, train=True, k_shot=10):
     if data_name == 'MNIST':
         if train:
             print("Return MNIST train.")
@@ -204,9 +204,11 @@ def get_dataset(root, data_name, imsize, train=True):
                 ]))
     elif data_name == 'MNISTM':
         if train:
-            print("Return MNIST-M train.")
-            return mnist_m.MNIST_M(
+            print("Return k-shot MNIST-M train.")
+
+            return mnist_m.FewShotMNIST_M(
                 root=root+'/mnist_m', train=True,
+                k_shot=k_shot,
                 transform=transforms.Compose([
                     transforms.Resize(imsize),
                     transforms.ToTensor(),

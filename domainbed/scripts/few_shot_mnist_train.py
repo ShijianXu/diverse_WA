@@ -30,13 +30,13 @@ from domainbed.few_shot_mnist_net import Adaptor
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Domain Adaptation MNIST->MNIST-M")
+    parser = argparse.ArgumentParser(description="Domain Adaptation MNIST Pretrain")
     parser.add_argument('--data_dir', type=str)
     parser.add_argument('--opt_name', type=str, default="Adam")
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--steps', type=int, default=10000000)
     parser.add_argument('--check_freq', type=int, default=10000)
-    parser.add_argument('--output_dir', type=str, default="MNIST_2_MNISTM")
+    parser.add_argument('--output_dir', type=str, default="MNIST_pretrain")
     parser.add_argument('--seed', type=int, default=0, help='Seed for everything else')
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
@@ -80,12 +80,12 @@ if __name__ == "__main__":
         dataset=train_dataset,
         weights=None,
         batch_size=hparams['batch_size'],
-        num_workers=1)
+        num_workers=2)
 
     eval_loader = FastDataLoader(
         dataset=test_dataset,
         batch_size=hparams['batch_size'],
-        num_workers=1)
+        num_workers=2)
     
     adaptor = Adaptor(channels=3, num_classes=10, hparams=hparams, opt_name=args.opt_name)
 
