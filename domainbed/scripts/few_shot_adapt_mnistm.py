@@ -34,7 +34,7 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', type=str)
     parser.add_argument('--opt_name', type=str, default="Adam")
     parser.add_argument('--train', action='store_true')
-    parser.add_argument('--steps', type=int, default=10000000)
+    parser.add_argument('--steps', type=int, default=10000)
     parser.add_argument('--output_dir', type=str, default="MNIST_2_MNISTM")
     parser.add_argument('--seed', type=int, default=0, help='Seed for everything else')
     parser.add_argument('--skip_model_save', action='store_true')
