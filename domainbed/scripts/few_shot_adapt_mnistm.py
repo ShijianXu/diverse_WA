@@ -10,8 +10,6 @@ python3 -m domainbed.scripts.few_shot_adapt_mnistm \
 """
 
 import argparse
-import collections
-import json
 import os
 import random
 import sys
@@ -23,7 +21,6 @@ import torch
 import torchvision
 import torch.utils.data
 
-from domainbed import mnist_m
 from domainbed.lib import misc
 from domainbed import few_shot_datasets
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
@@ -123,7 +120,7 @@ if __name__ == '__main__':
             for x,y in next(train_minibatches_iterator)]
             
         # update
-        step_vals = adaptor.update(minibatches_device, None)
+        step_vals = adaptor.update(minibatches_device)
 
     # test 
     print("Testing again ...")
