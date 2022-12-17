@@ -1,3 +1,5 @@
+import os
+
 import torch
 import torch.nn as nn
 import torch
@@ -33,11 +35,18 @@ class Classifier(nn.Module):
 
 
 class Adaptor(torch.nn.Module):
-    def __init__(self, channels, num_classes, hparams, opt_name='Adam'):
+    def __init__(self, channels, num_classes, hparams, opt_name='Adam', init_step=False, path_for_init=None):
         super(Adaptor, self).__init__()
         self.channels = channels
         self.num_classes = num_classes
         self.classifier = Classifier(self.channels, self.num_classes)
+
+        if path_for_init is not None:
+            if os.path.exists(path_for_init):
+                self.classifier.load_state_dict(torch.load(path_for_init))
+            else:
+                assert init_step, "Your initialization has not been saved yet"
+
         self.hparams = hparams
         self.opt_name = opt_name
 
@@ -102,6 +111,10 @@ class Adaptor(torch.nn.Module):
                 module.momentum = 0
 
         self.classifier.apply(_disable)
+
+    def save_path_for_future_init(self, path_for_init):
+        assert not os.path.exists(path_for_init), "The initialization has already been saved"
+        torch.save(self.classifier.state_dict(), path_for_init)
 
 
 if __name__ == '__main__':

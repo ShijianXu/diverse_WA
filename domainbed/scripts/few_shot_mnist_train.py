@@ -1,11 +1,14 @@
 """
-# train
+# train baseline
 python3 -m domainbed.scripts.few_shot_mnist_train \
     --data_dir=../data \
     --opt_name Adam \
     --output_dir=./mnist_pretrain \
-    --steps 10 \
-    --check_freq 5
+    --path_for_init ./mnist_future_init.pth \
+    --steps 500 \
+    --check_freq 5 \
+    --init_step
+
 """
 
 
@@ -25,6 +28,7 @@ import torchvision
 from domainbed import mnist_m
 from domainbed.lib import misc
 from domainbed import few_shot_datasets
+from domainbed import hparams_mnist_registry
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
 from domainbed.few_shot_mnist_net import Adaptor
 
@@ -38,9 +42,13 @@ if __name__ == "__main__":
     parser.add_argument('--check_freq', type=int, default=1000)
     parser.add_argument('--output_dir', type=str, default="MNIST_pretrain")
     parser.add_argument('--seed', type=int, default=0, help='Seed for everything else')
+    parser.add_argument('--hparams', type=str, help='JSON-serialized hparams dict')
+    parser.add_argument('--hparams_seed', type=int, default=0, help='Seed for random hparams (0 means "default hparams")')
+    parser.add_argument('--trial_seed', type=int, default=0, help='Trial number (used for seeding split_dataset and random_hparams).')
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
-    parser.add_argument('--sam_rho', type=float, default=0.05)
+    parser.add_argument('--path_for_init', type=str, default=None)
+    parser.add_argument('--init_step', action='store_true')
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -51,11 +59,16 @@ if __name__ == "__main__":
     for k, v in sorted(vars(args).items()):
         print('\t{}: {}'.format(k, v))
 
-    hparams = {}
-    hparams['lr'] = 5e-4
-    hparams['rho'] = args.sam_rho
-    hparams['weight_decay'] = 5e-4
-    hparams['batch_size'] = 64
+
+    # set hyperparameters
+    if args.hparams_seed == 0:
+        hparams = hparams_mnist_registry.default_hparams(args.opt_name)
+    else:
+        hparams = hparams_mnist_registry.random_hparams(args.opt_name, misc.seed_hash(args.hparams_seed, args.trial_seed))
+
+    print('HParams:')
+    for k, v in sorted(hparams.items()):
+        print('\t{}: {}'.format(k, v))
     
     random.seed(args.seed)
     np.random.seed(args.seed)
@@ -87,7 +100,14 @@ if __name__ == "__main__":
         batch_size=hparams['batch_size'],
         num_workers=2)
     
-    adaptor = Adaptor(channels=3, num_classes=10, hparams=hparams, opt_name=args.opt_name)
+    adaptor = Adaptor(
+        channels=3, 
+        num_classes=10, 
+        hparams=hparams, 
+        opt_name=args.opt_name,
+        init_step=args.init_step,
+        path_for_init=args.path_for_init
+    )
 
     adaptor.to(device)
 
@@ -176,6 +196,11 @@ if __name__ == "__main__":
             if args.save_model_every_checkpoint:
                 save_checkpoint(f'model_step{step}.pkl')
 
-        save_checkpoint('model.pkl')
-        with open(os.path.join(args.output_dir, 'done'), 'w') as f:
-            f.write('done')
+
+    if args.init_step:
+        adaptor.save_path_for_future_init(args.path_for_init)
+        
+    save_checkpoint('model.pkl')
+
+    with open(os.path.join(args.output_dir, 'done'), 'w') as f:
+        f.write('done')
