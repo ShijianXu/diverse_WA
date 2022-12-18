@@ -4,7 +4,7 @@ python3 -m domainbed.scripts.sweep_mnist launch \
     --path_for_init ./mnist_future_init_adam.pth \
     --command_launcher local \
     --opt_name Adam \
-    --steps 3000 \
+    --steps 10000 \
     --check_freq 1000 \
     --n_hparams 10 \
     --n_trials 1 \

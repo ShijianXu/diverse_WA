@@ -9,3 +9,9 @@ rsync.sh
 *.pth
 *.pkl
 mnist_pretrain/
+mnist_adam_2_mnistm_adam_10_shot/
+mnist_adam_2_mnistm_sam_10_shot/
+mnist_init_train_adam/
+mnist_init_train_sam/
+mnist_sweep_diwa_adam/
+mnist_sweep_diwa_sam/
