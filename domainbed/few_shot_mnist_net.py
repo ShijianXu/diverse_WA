@@ -45,8 +45,8 @@ class Adaptor(torch.nn.Module):
         self.channels = channels
         self.num_classes = num_classes
         
-        self.classifier = Classifier(self.channels, self.num_classes)
-        # self.classifier = torchvision.models.resnet18(num_classes=num_classes)
+        # self.classifier = Classifier(self.channels, self.num_classes)
+        self.classifier = torchvision.models.resnet18(num_classes=num_classes)
 
         if path_for_init is not None:
             if os.path.exists(path_for_init):
