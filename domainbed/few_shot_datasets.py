@@ -9,6 +9,7 @@ from torch.utils.data import Dataset
 import torchvision
 
 from domainbed import mnist_m
+from domainbed import svhn
 
 #========================================
 #                 utils
@@ -218,6 +219,27 @@ def get_dataset(root, data_name, imsize, train=True, k_shot=10):
             print("Return MNIST-M test.")
             return mnist_m.MNIST_M(
                 root=root+'/mnist_m', train=False,
+                transform=transforms.Compose([
+                    transforms.Resize(imsize),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]))
+
+    elif data_name == 'SVHN':
+        if train:
+            print("Return k-shot SVHN train.")
+
+            return svhn.FewShotSVHN(
+                root=os.path.join(root, 'SVHN'), train=True, k_shot=k_shot,
+                transform=transforms.Compose([
+                    transforms.Resize(imsize),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]))
+        else:
+            print("Return SVHN test.")
+            return torchvision.datasets.SVHN(
+                root=os.path.join(root, 'SVHN'), split='test', download=True,
                 transform=transforms.Compose([
                     transforms.Resize(imsize),
                     transforms.ToTensor(),

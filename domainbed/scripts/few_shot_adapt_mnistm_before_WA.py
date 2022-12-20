@@ -32,6 +32,8 @@ def _get_args():
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
 
+    parser.add_argument('--target_dataset', type=str)
+
     inf_args = parser.parse_args()
     return inf_args
 
@@ -68,8 +70,15 @@ def adapt(adaptor, ckpt_folder, hparams, train_args, args):
     adaptor.to(device)
 
     data_dir = os.path.abspath(args.data_dir)
-    train_dataset = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, True, args.k_shot)
-    test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, False)
+
+    if args.target_dataset == 'MNISTM':
+        train_dataset = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, True, args.k_shot)
+        test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, False)
+    elif args.target_dataset == 'SVHN':
+        train_dataset = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, True, args.k_shot)
+        test_dataset  = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, False)
+    else:
+        raise NotImplementedError
 
     train_loader = InfiniteDataLoader(
         dataset=train_dataset,

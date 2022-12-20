@@ -5,6 +5,8 @@ import torch.nn as nn
 import torch
 import torch.nn.functional as F
 
+import torchvision
+
 from domainbed.sam import SAMin
 from torch.nn.modules.batchnorm import _BatchNorm
 
@@ -42,7 +44,9 @@ class Adaptor(torch.nn.Module):
         super(Adaptor, self).__init__()
         self.channels = channels
         self.num_classes = num_classes
+        
         self.classifier = Classifier(self.channels, self.num_classes)
+        # self.classifier = torchvision.models.resnet18(num_classes=num_classes)
 
         if path_for_init is not None:
             if os.path.exists(path_for_init):
@@ -204,7 +208,7 @@ class DiWA_Adaptor(torch.nn.Module):
 
 
 if __name__ == '__main__':
-    net = Classifier()
+    net = torchvision.models.resnet18(num_classes=10)
     x = torch.rand(2, 3, 64, 64)
     out = net(x)
     print(out.shape)
