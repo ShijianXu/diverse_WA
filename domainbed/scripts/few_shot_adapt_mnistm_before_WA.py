@@ -203,6 +203,7 @@ def wa_test(ckpt_folders, inf_args):
         batch_size=64,
         num_workers=2)
 
+    wa_adaptor.to(device)
     print("Test the averaged adapted model.")
     acc = misc.accuracy(wa_adaptor, eval_loader, None, device)
     print("Adaptation before weight averaging, the accuracy is: ", acc)
