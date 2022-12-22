@@ -1,4 +1,4 @@
-python3 -m domainbed.scripts.few_shot_adapt_mnistm_before_WA \
+python3 -m domainbed.scripts.few_shot_adapt_before_WA \
     --data_dir=../data \
     --target_dataset SVHN \
     --sweep_dir=./mnist_res18_sweep_diwa_adam \
