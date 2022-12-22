@@ -7,4 +7,4 @@ python3 -m domainbed.scripts.few_shot_adapt_mnistm_before_WA \
     --opt_name Adam \
     --sam_rho 0.05 \
     --k_shot 10 \
-    --steps 200
+    --steps 400

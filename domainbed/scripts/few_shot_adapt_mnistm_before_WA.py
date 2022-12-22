@@ -197,6 +197,15 @@ def wa_test(ckpt_folders, inf_args):
         wa_adaptor.add_weights(ind_adaptor.classifier)
         del ind_adaptor
 
+    data_dir = os.path.abspath(inf_args.data_dir)
+
+    if inf_args.target_dataset == 'MNISTM':
+        test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, False)
+    elif inf_args.target_dataset == 'SVHN':
+        test_dataset  = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, False)
+    else:
+        raise NotImplementedError
+
     test_dataset  = few_shot_datasets.get_dataset(inf_args.data_dir, 'MNISTM', 64, False)
     eval_loader = FastDataLoader(
         dataset=test_dataset,
