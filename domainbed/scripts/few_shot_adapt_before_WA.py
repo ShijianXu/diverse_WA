@@ -206,7 +206,6 @@ def wa_test(ckpt_folders, inf_args):
     else:
         raise NotImplementedError
 
-    test_dataset  = few_shot_datasets.get_dataset(inf_args.data_dir, 'MNISTM', 64, False)
     eval_loader = FastDataLoader(
         dataset=test_dataset,
         batch_size=64,
