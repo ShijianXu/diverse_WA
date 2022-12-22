@@ -26,7 +26,7 @@ class FewShotSVHN(torch.utils.data.Dataset):
         self.data = loaded_mat["X"]
         self.labels = loaded_mat["y"].astype(np.int64).squeeze()
         np.place(self.labels, self.labels == 10, 0)
-        print("labels: ", self.labels[:30])
+        # print("labels: ", self.labels[:30])
         self.data = np.transpose(self.data, (3, 2, 0, 1))
 
         self.sample_idx = []

@@ -15,3 +15,7 @@ mnist_init_train_adam/
 mnist_init_train_sam/
 mnist_sweep_diwa_adam/
 mnist_sweep_diwa_sam/
+mnist_res18_sweep_diwa_sam/
+mnist_res18_sweep_diwa_adam/
+mnist_res18_adam_diwa_2_svhn_adam_10_shot/
+mnist_res18_sam_diwa_2_mnistm_sam_10_shot/
