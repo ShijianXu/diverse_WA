@@ -24,7 +24,7 @@ import torch.utils.data
 from domainbed.lib import misc
 from domainbed import few_shot_datasets
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
-from domainbed.few_shot_mnist_net import Adaptor
+from domainbed.few_shot_model import Adaptor
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="Domain Adaptation MNIST-M Adapt")

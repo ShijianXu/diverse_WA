@@ -13,9 +13,9 @@ from torch.nn.modules.batchnorm import _BatchNorm
 import copy
 
 
-class Classifier(nn.Module):
+class CNN(nn.Module):
     def __init__(self, channels=3, num_classes=10):
-        super(Classifier, self).__init__()
+        super(CNN, self).__init__()
         self.conv = nn.Sequential(
             nn.Conv2d(channels, 32, kernel_size=5, stride=1, padding=2, bias=True),
             nn.ReLU(True),
@@ -40,33 +40,52 @@ class Classifier(nn.Module):
 
 
 class Adaptor(torch.nn.Module):
-    def __init__(self, channels, num_classes, hparams, opt_name='Adam', init_step=False, path_for_init=None):
+    def __init__(self, channels, num_classes, hparams, opt_name='Adam', model_name='resnet18', model_pretrained=False, linear_probe=False, path_for_init=None):
         super(Adaptor, self).__init__()
         self.channels = channels
         self.num_classes = num_classes
         
-        # self.classifier = Classifier(self.channels, self.num_classes)
-        self.classifier = torchvision.models.resnet18(num_classes=num_classes)
+        if model_name == 'CNN':
+            self.classifier = CNN(self.channels, self.num_classes)
+        elif model_name == 'resnet18':
+            if model_pretrained:
+                self.classifier = torchvision.models.resnet18(num_classes=num_classes, pretrained=True)
+            else:
+                self.classifier = torchvision.models.resnet18(num_classes=num_classes)
+        elif model_name == 'resnet50':
+            if model_pretrained:
+                self.classifier = torchvision.models.resnet50(num_classes=num_classes, pretrained=True)
+            else:
+                self.classifier = torchvision.models.resnet50(num_classes=num_classes)
 
         if path_for_init is not None:
             if os.path.exists(path_for_init):
                 self.classifier.load_state_dict(torch.load(path_for_init))
             else:
-                assert init_step, "Your initialization has not been saved yet"
+                assert linear_probe, "Your initialization has not been saved yet"
 
         self.hparams = hparams
         self.opt_name = opt_name
 
+        if not linear_probe:
+            # fine-tuning the whole network
+            parameters_to_be_optimized = self.classifier.parameters()
+        else:
+            # linear probing
+            parameters_to_be_optimized = self.classifier.fc.parameters()
+
         if self.opt_name == 'Adam':
             self.optimizer = torch.optim.Adam(
-                self.classifier.parameters(),
+                #self.classifier.parameters(),
+                parameters_to_be_optimized,
                 lr=self.hparams["lr"],
                 weight_decay=self.hparams['weight_decay']
             )
         elif self.opt_name == 'SAM':
             base_optimizer = torch.optim.Adam
             self.optimizer = SAMin(
-                self.classifier.parameters(),
+                #self.classifier.parameters(),
+                parameters_to_be_optimized,
                 base_optimizer,
                 rho=self.hparams["rho"],
                 lr=self.hparams["lr"],
@@ -134,7 +153,6 @@ class DiWA_Adaptor(torch.nn.Module):
         self.global_count = 0
         self.opt_name = opt_name
 
-    
     def add_weights(self, network):
         if self.network_wa is None:
             self.network_wa = copy.deepcopy(network)

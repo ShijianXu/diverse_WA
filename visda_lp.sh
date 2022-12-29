@@ -1,0 +1,12 @@
+python3 -m domainbed.scripts.few_shot_train \
+    --data_dir=../data \
+    --train_data VisDA \
+    --num_classes 12 \
+    --opt_name SAM \
+    --model_name resnet50 \
+    --model_pretrained \
+    --linear_probe \
+    --output_dir=./res50_visda_lineprobe_sam \
+    --path_for_init ./res50_visda_lineprobe_sam_future_init.pth \
+    --steps 5000 \
+    --check_freq 500

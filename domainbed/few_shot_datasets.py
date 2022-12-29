@@ -8,8 +8,9 @@ from torchvision import transforms
 from torch.utils.data import Dataset
 import torchvision
 
-from domainbed import mnist_m
-from domainbed import svhn
+from domainbed import few_shot_mnist_m
+from domainbed import few_shot_svhn
+from domainbed import few_shot_visda_c
 
 #========================================
 #                 utils
@@ -203,11 +204,12 @@ def get_dataset(root, data_name, imsize, train=True, k_shot=10):
                     transforms.ToTensor(),
                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                 ]))
+
     elif data_name == 'MNISTM':
         if train:
             print("Return k-shot MNIST-M train.")
 
-            return mnist_m.FewShotMNIST_M(
+            return few_shot_mnist_m.FewShotMNIST_M(
                 root=root+'/mnist_m', train=True,
                 k_shot=k_shot,
                 transform=transforms.Compose([
@@ -217,7 +219,7 @@ def get_dataset(root, data_name, imsize, train=True, k_shot=10):
                 ]))
         else:
             print("Return MNIST-M test.")
-            return mnist_m.MNIST_M(
+            return few_shot_mnist_m.MNIST_M(
                 root=root+'/mnist_m', train=False,
                 transform=transforms.Compose([
                     transforms.Resize(imsize),
@@ -229,7 +231,7 @@ def get_dataset(root, data_name, imsize, train=True, k_shot=10):
         if train:
             print("Return k-shot SVHN train.")
 
-            return svhn.FewShotSVHN(
+            return few_shot_svhn.FewShotSVHN(
                 root=os.path.join(root, 'SVHN'), train=True, k_shot=k_shot,
                 transform=transforms.Compose([
                     transforms.Resize(imsize),
@@ -244,6 +246,48 @@ def get_dataset(root, data_name, imsize, train=True, k_shot=10):
                     transforms.Resize(imsize),
                     transforms.ToTensor(),
                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]))
+
+    elif data_name == 'VisDA':
+        if train:
+            if k_shot == -1:
+                print("Return all VisDA training data.")
+                return few_shot_visda_c.VisDA(
+                    root=os.path.join(root, 'VisDA'), train=True,
+                    transform=transforms.Compose([
+                        transforms.Resize(256),
+                        transforms.CenterCrop(224),
+                        transforms.RandomHorizontalFlip(),
+                        transforms.ToTensor(),
+                        transforms.Normalize(
+                            mean=[0.485, 0.456, 0.406],
+                            std=[0.229, 0.224, 0.225])
+                    ]))
+            else:
+                print("Return k-shot VisDA training data.")
+                return few_shot_visda_c.FewShotVisDA(
+                    root=os.path.join(root, 'VisDA'), train=True, k_shot=k_shot,
+                    transform=transforms.Compose([
+                        transforms.Resize(256),
+                        transforms.CenterCrop(224),
+                        transforms.RandomHorizontalFlip(),
+                        transforms.ToTensor(),
+                        transforms.Normalize(
+                            mean=[0.485, 0.456, 0.406],
+                            std=[0.229, 0.224, 0.225])
+                    ]))
+
+        else:
+            print("Return all VisDA validation data.")
+            return few_shot_visda_c.VisDA(
+                root=os.path.join(root, 'VisDA'), train=False,
+                transform=transforms.Compose([
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                    transforms.ToTensor(),
+                    transforms.Normalize(
+                        mean=[0.485, 0.456, 0.406],
+                        std=[0.229, 0.224, 0.225])
                 ]))
 
     else:

@@ -1,14 +1,26 @@
 """
 # train baseline
-python3 -m domainbed.scripts.few_shot_mnist_train \
+python3 -m domainbed.scripts.few_shot_train \
     --data_dir=../data \
     --opt_name Adam \
     --output_dir=./mnist_pretrain \
     --path_for_init ./mnist_future_init.pth \
     --steps 500 \
     --check_freq 5 \
-    --init_step
+    --linear_probe
 
+python3 -m domainbed.scripts.few_shot_train \
+    --data_dir=../data \
+    --train_data VisDA \
+    --num_classes 12 \
+    --opt_name SAM \
+    --model_name resnet50 \
+    --model_pretrained \
+    --linear_probe \
+    --output_dir=./res50_visda_lineprobe_sam \
+    --path_for_init ./res50_visda_lineprobe_sam_future_init.pth \
+    --steps 5000 \
+    --check_freq 500
 """
 
 
@@ -22,15 +34,12 @@ import time
 
 import numpy as np
 import torch
-import torch.nn as nn
-import torchvision
 
-from domainbed import mnist_m
 from domainbed.lib import misc
 from domainbed import few_shot_datasets
-from domainbed import hparams_mnist_registry
+from domainbed import hparams_registry_few_shot
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
-from domainbed.few_shot_mnist_net import Adaptor
+from domainbed.few_shot_model import Adaptor
 
 
 if __name__ == "__main__":
@@ -40,7 +49,7 @@ if __name__ == "__main__":
     parser.add_argument('--train', action='store_true')
     parser.add_argument('--steps', type=int, default=10000)
     parser.add_argument('--check_freq', type=int, default=1000)
-    parser.add_argument('--output_dir', type=str, default="MNIST_pretrain")
+    parser.add_argument('--output_dir', type=str, default="few_shot_pretrain")
     parser.add_argument('--seed', type=int, default=0, help='Seed for everything else')
     parser.add_argument('--hparams', type=str, help='JSON-serialized hparams dict')
     parser.add_argument('--hparams_seed', type=int, default=0, help='Seed for random hparams (0 means "default hparams")')
@@ -48,7 +57,12 @@ if __name__ == "__main__":
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
     parser.add_argument('--path_for_init', type=str, default=None)
-    parser.add_argument('--init_step', action='store_true')
+    parser.add_argument('--linear_probe', action='store_true')
+    parser.add_argument('--fine_tune', action='store_true')
+    parser.add_argument('--model_name', type=str, default="resnet18")
+    parser.add_argument('--model_pretrained', action='store_true')
+    parser.add_argument('--train_data', type=str, default='MNIST')
+    parser.add_argument('--num_classes', type=int, default=10)
     args = parser.parse_args()
 
     os.makedirs(args.output_dir, exist_ok=True)
@@ -59,12 +73,11 @@ if __name__ == "__main__":
     for k, v in sorted(vars(args).items()):
         print('\t{}: {}'.format(k, v))
 
-
     # set hyperparameters
     if args.hparams_seed == 0:
-        hparams = hparams_mnist_registry.default_hparams(args.opt_name)
+        hparams = hparams_registry_few_shot.default_hparams(args.opt_name)
     else:
-        hparams = hparams_mnist_registry.random_hparams(args.opt_name, misc.seed_hash(args.hparams_seed, args.trial_seed))
+        hparams = hparams_registry_few_shot.random_hparams(args.opt_name, misc.seed_hash(args.hparams_seed, args.trial_seed))
 
     print('HParams:')
     for k, v in sorted(hparams.items()):
@@ -83,11 +96,8 @@ if __name__ == "__main__":
 
     data_dir = os.path.abspath(args.data_dir)
 
-    train_dataset = few_shot_datasets.get_dataset(data_dir, 'MNIST', 64, True)
-    test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNIST', 64, False)
-
-    # train_dataset = None
-    # test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, False)
+    train_dataset = few_shot_datasets.get_dataset(data_dir, args.train_data, 64, True, k_shot=-1)
+    test_dataset  = few_shot_datasets.get_dataset(data_dir, args.train_data, 64, False, k_shot=-1)
 
     train_loader = InfiniteDataLoader(
         dataset=train_dataset,
@@ -102,10 +112,12 @@ if __name__ == "__main__":
     
     adaptor = Adaptor(
         channels=3, 
-        num_classes=10, 
+        num_classes=args.num_classes, 
         hparams=hparams, 
         opt_name=args.opt_name,
-        init_step=args.init_step,
+        model_name=args.model_name,
+        model_pretrained=args.model_pretrained,
+        linear_probe=args.linear_probe,
         path_for_init=args.path_for_init
     )
 
@@ -197,7 +209,7 @@ if __name__ == "__main__":
                 save_checkpoint(f'model_step{step}.pkl')
 
 
-    if args.init_step:
+    if args.linear_probe:
         adaptor.save_path_for_future_init(args.path_for_init)
         
     save_checkpoint('model.pkl')

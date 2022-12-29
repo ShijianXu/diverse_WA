@@ -25,7 +25,7 @@ import torch.utils.data
 from domainbed.lib import misc
 from domainbed import few_shot_datasets
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
-from domainbed.few_shot_mnist_net import Adaptor, DiWA_Adaptor
+from domainbed.few_shot_model import Adaptor, DiWA_Adaptor
 
 
 def source_test(adaptor, args):
