@@ -20,7 +20,7 @@ python3 -m domainbed.scripts.few_shot_train \
     --output_dir=./res50_visda_lineprobe_sam \
     --path_for_init ./res50_visda_lineprobe_sam_future_init.pth \
     --steps 5000 \
-    --check_freq 500
+    --check_freq 1000
 """
 
 
