@@ -67,6 +67,7 @@ class Adaptor(torch.nn.Module):
         if path_for_init is not None:
             if os.path.exists(path_for_init):
                 self.classifier.load_state_dict(torch.load(path_for_init))
+                print(f"Loaded linear probed shared init model {path_for_init}.")
             else:
                 assert linear_probe, "Your initialization has not been saved yet"
 
