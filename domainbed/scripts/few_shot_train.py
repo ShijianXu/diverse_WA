@@ -75,9 +75,9 @@ if __name__ == "__main__":
 
     # set hyperparameters
     if args.hparams_seed == 0:
-        hparams = hparams_registry_few_shot.default_hparams(args.opt_name)
+        hparams = hparams_registry_few_shot.default_hparams(args.opt_name, args.train_data)
     else:
-        hparams = hparams_registry_few_shot.random_hparams(args.opt_name, misc.seed_hash(args.hparams_seed, args.trial_seed))
+        hparams = hparams_registry_few_shot.random_hparams(args.opt_name, misc.seed_hash(args.hparams_seed, args.trial_seed), args.train_data)
 
     print('HParams:')
     for k, v in sorted(hparams.items()):

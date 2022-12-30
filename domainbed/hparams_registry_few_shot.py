@@ -2,7 +2,7 @@ import numpy as np
 from domainbed.lib import misc
 
 
-def _hparams(opt_name, random_seed):
+def _hparams(opt_name, random_seed, data_name):
     hparams = {}
 
     def _hparam(name, default_val, random_val_fn):
@@ -15,6 +15,8 @@ def _hparams(opt_name, random_seed):
         hparams[name] = (default_val, random_val_fn(random_state))
         print(f"rand hparam {name} with value {hparams[name]}")
 
+    if data_name == 'VisDA':
+        _hparam('lr', 5e-4, lambda r: r.choice([5e-4, 1e-5, 5e-5]))
     _hparam('lr', 5e-4, lambda r: r.choice([1e-4, 3e-4, 5e-4]))
     _hparam('weight_decay', 0, lambda r: r.choice([1e-4, 1e-6]))
     _hparam('batch_size', 32, lambda r: 32)
@@ -24,9 +26,9 @@ def _hparams(opt_name, random_seed):
 
     return hparams
 
-def default_hparams(opt_name):
-    return {a: b for a, (b, c) in _hparams(opt_name, 0).items()}
+def default_hparams(opt_name, data_name='MNIST'):
+    return {a: b for a, (b, c) in _hparams(opt_name, 0, data_name).items()}
 
 
-def random_hparams(opt_name, seed):
-    return {a: c for a, (b, c) in _hparams(opt_name, seed).items()}
+def random_hparams(opt_name, seed, data_name='MNIST'):
+    return {a: c for a, (b, c) in _hparams(opt_name, seed, data_name).items()}
