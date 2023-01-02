@@ -1,5 +1,5 @@
 """
-python3 -m domainbed.scripts.few_shot_adapt_mnistm_after_WA \
+python3 -m domainbed.scripts.few_shot_adapt_after_WA \
     --data_dir=../data \
     --model_name resnet50 \
     --target_dataset VisDA \
