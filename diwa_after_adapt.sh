@@ -1,9 +1,11 @@
 python3 -m domainbed.scripts.few_shot_adapt_before_WA \
     --data_dir=../data \
-    --target_dataset SVHN \
-    --sweep_dir=./mnist_res18_sweep_diwa_sam \
+    --model_name resnet50 \
+    --target_dataset VisDA \
+    --num_classes 12 \
+    --sweep_dir=./VisDA_sweep_diwa_adam \
     --weight_selection uniform \
-    --opt_name SAM \
+    --opt_name Adam \
     --sam_rho 0.05 \
     --k_shot 10 \
     --steps 100
