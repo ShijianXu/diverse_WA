@@ -1,13 +1,16 @@
 """
 python3 -m domainbed.scripts.few_shot_adapt_mnistm_after_WA \
     --data_dir=../data \
-    --sweep_dir=./mnist_sweep_diwa_adam \
-    --output_dir=./mnist_adam_diwa_2_mnistm_adam_10_shot \
+    --model_name resnet50 \
+    --target_dataset VisDA \
+    --num_classes 12 \
+    --sweep_dir=./VisDA_sweep_diwa_adam \
+    --output_dir=./VisDA_adam_diwa_synth2real_adam_10_shot \
     --weight_selection uniform \
     --opt_name Adam \
     --sam_rho 0.05 \
     --k_shot 10 \
-    --steps 300    
+    --steps 100
 """
 
 import argparse
@@ -151,6 +154,8 @@ def _get_args():
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
 
     parser.add_argument('--target_dataset', type=str)
+    parser.add_argument('--model_name', type=str, default="resnet18")
+    parser.add_argument('--num_classes', type=int, default=10)
 
     inf_args = parser.parse_args()
     return inf_args
@@ -175,12 +180,12 @@ def get_model_folders(inf_args):
     return model_folders_list
 
 
-def get_wa_model(ckpt_folders, hparams, opt_name, device):
+def get_wa_model(ckpt_folders, hparams, args, device):
     wa_adaptor = DiWA_Adaptor(
         channels=3,
         num_classes=10,
         hparams=hparams,
-        opt_name=opt_name
+        opt_name=args.opt_name
     )
 
     for folder in ckpt_folders:
@@ -191,8 +196,9 @@ def get_wa_model(ckpt_folders, hparams, opt_name, device):
         # load individual weights
         ind_adaptor = Adaptor(
             channels=3,
-            num_classes=10,
-            hparams=hparams
+            num_classes=args.num_classes,
+            hparams=hparams,
+            model_name=args.model_name
         )
         missing_keys, unexpected_keys =  ind_adaptor.load_state_dict(save_dict["model_dict"], strict=False)
 
@@ -226,7 +232,7 @@ def main():
     hparams['batch_size'] = 8
 
     if inf_args.weight_selection == "uniform":
-        wa_model = get_wa_model(model_folders, hparams, inf_args.opt_name, device)
+        wa_model = get_wa_model(model_folders, hparams, inf_args, device)
 
         # print("Get Averaged Model. Test on the source domain.")
         # source_test(wa_model, inf_args)
