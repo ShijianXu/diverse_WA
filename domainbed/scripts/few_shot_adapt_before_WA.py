@@ -1,10 +1,12 @@
 """
 python3 -m domainbed.scripts.few_shot_adapt_before_WA \
     --data_dir=../data \
-    --target_dataset SVHN \
-    --sweep_dir=./mnist_res18_sweep_diwa_sam \
+    --model_name resnet50 \
+    --target_dataset VisDA \
+    --num_classes 12 \
+    --sweep_dir=./VisDA_sweep_diwa_adam \
     --weight_selection uniform \
-    --opt_name SAM \
+    --opt_name Adam \
     --sam_rho 0.05 \
     --k_shot 10 \
     --steps 100
@@ -43,6 +45,8 @@ def _get_args():
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
 
     parser.add_argument('--target_dataset', type=str)
+    parser.add_argument('--model_name', type=str, default="resnet18")
+    parser.add_argument('--num_classes', type=int, default=10)
 
     inf_args = parser.parse_args()
     return inf_args
@@ -87,6 +91,10 @@ def adapt(adaptor, ckpt_folder, hparams, train_args, args):
     elif args.target_dataset == 'SVHN':
         train_dataset = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, True, args.k_shot)
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, False)
+    elif args.target_dataset == 'VisDA':
+        visda_dataset = few_shot_datasets.get_dataset(data_dir, 'VisDA_few_shot', k_shot=args.k_shot)
+        train_dataset = visda_dataset.train_dataset
+        test_dataset = visda_dataset.test_dataset
     else:
         raise NotImplementedError
 
@@ -161,11 +169,13 @@ def individual_adapt(ckpt_folders, args):
         # load individual weights
         ind_adaptor = Adaptor(
             channels=3,
-            num_classes=10,
+            num_classes=args.num_classes,
             hparams=hparams,
-            opt_name=train_args['opt_name']
+            opt_name=train_args['opt_name'],
+            model_name=args.model_name
         )
         missing_keys, unexpected_keys =  ind_adaptor.load_state_dict(save_dict["model_dict"], strict=False)
+        print(f"Load individual model with missing keys {missing_keys} and unexpected keys {unexpected_keys}.")
 
         acc_before, acc_after = adapt(ind_adaptor, folder, hparams, train_args, args)
         accs_before[folder] = acc_before
@@ -187,7 +197,7 @@ def wa_test(ckpt_folders, inf_args):
 
     wa_adaptor = DiWA_Adaptor(
         channels=3,
-        num_classes=10,
+        num_classes=inf_args.num_classes,
         hparams=None
     )
 
@@ -199,10 +209,12 @@ def wa_test(ckpt_folders, inf_args):
         # load individual weights
         ind_adaptor = Adaptor(
             channels=3,
-            num_classes=10,
-            hparams=hparams
+            num_classes=inf_args.num_classes,
+            hparams=hparams,
+            model_name=inf_args.model_name
         )
         missing_keys, unexpected_keys =  ind_adaptor.load_state_dict(save_dict["model_dict"], strict=False)
+        print(f"Load adapted model with missing keys {missing_keys} and unexpected keys {unexpected_keys}.")
 
         wa_adaptor.add_weights(ind_adaptor.classifier)
         del ind_adaptor
@@ -213,6 +225,9 @@ def wa_test(ckpt_folders, inf_args):
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, False)
     elif inf_args.target_dataset == 'SVHN':
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, False)
+    elif inf_args.target_dataset == 'VisDA':
+        visda_dataset = few_shot_datasets.get_dataset(data_dir, 'VisDA_few_shot')
+        test_dataset = visda_dataset.test_dataset
     else:
         raise NotImplementedError
 

@@ -183,7 +183,7 @@ def get_model_folders(inf_args):
 def get_wa_model(ckpt_folders, hparams, args, device):
     wa_adaptor = DiWA_Adaptor(
         channels=3,
-        num_classes=10,
+        num_classes=args.num_classes,
         hparams=hparams,
         opt_name=args.opt_name
     )
@@ -201,7 +201,7 @@ def get_wa_model(ckpt_folders, hparams, args, device):
             model_name=args.model_name
         )
         missing_keys, unexpected_keys =  ind_adaptor.load_state_dict(save_dict["model_dict"], strict=False)
-        print(f"Load individual models with missing keys {missing_keys} and unexpected keys {unexpected_keys}.")
+        print(f"Load individual model with missing keys {missing_keys} and unexpected keys {unexpected_keys}.")
 
         wa_adaptor.add_weights(ind_adaptor.classifier)
         del ind_adaptor
