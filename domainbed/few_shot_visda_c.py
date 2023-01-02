@@ -10,16 +10,16 @@ import matplotlib.pyplot as plt
 from torch.utils.data import Dataset
 
 class CustomDataset(Dataset):
-    def __init__(self, instances, train=True) -> None:
+    def __init__(self, instances, image_dir, train=True) -> None:
         super().__init__()
 
         self.samples = instances
         self.is_train = train
+        self.image_dir = image_dir
 
         self.transform=transforms.Compose([
             transforms.Resize(256),
             transforms.CenterCrop(224),
-            transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(
                 mean=[0.485, 0.456, 0.406],
@@ -80,8 +80,8 @@ class FewShotVisDA():
         print(f"Total {len(self.few_samples)} adaptation samples.")
         print(f"Total {len(self.test_samples)} test samples.")
 
-        self.train_dataset = CustomDataset(self.few_samples, train=True)
-        self.test_dataset = CustomDataset(self.test_samples, train=False)
+        self.train_dataset = CustomDataset(self.few_samples, self.image_dir, train=True)
+        self.test_dataset = CustomDataset(self.test_samples, self.image_dir, train=False)
 
 
 class VisDA(torch.utils.data.Dataset):
