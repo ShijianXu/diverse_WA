@@ -182,7 +182,7 @@ class PACS(SingleEnvironmentDatasets):
 
 ## Datasets for MNIST and MNIST-M
 
-def get_dataset(root, data_name, imsize, train=True, k_shot=10):
+def get_dataset(root, data_name, imsize=64, train=True, k_shot=10):
     if data_name == 'MNIST':
         if train:
             print("Return MNIST train.")
@@ -250,32 +250,19 @@ def get_dataset(root, data_name, imsize, train=True, k_shot=10):
 
     elif data_name == 'VisDA':
         if train:
-            if k_shot == -1:
-                print("Return all VisDA training data.")
-                return few_shot_visda_c.VisDA(
-                    root=os.path.join(root, 'VisDA'), train=True,
-                    transform=transforms.Compose([
-                        transforms.Resize(256),
-                        transforms.CenterCrop(224),
-                        transforms.RandomHorizontalFlip(),
-                        transforms.ToTensor(),
-                        transforms.Normalize(
-                            mean=[0.485, 0.456, 0.406],
-                            std=[0.229, 0.224, 0.225])
-                    ]))
-            else:
-                print("Return k-shot VisDA training data.")
-                return few_shot_visda_c.FewShotVisDA(
-                    root=os.path.join(root, 'VisDA'), train=True, k_shot=k_shot,
-                    transform=transforms.Compose([
-                        transforms.Resize(256),
-                        transforms.CenterCrop(224),
-                        transforms.RandomHorizontalFlip(),
-                        transforms.ToTensor(),
-                        transforms.Normalize(
-                            mean=[0.485, 0.456, 0.406],
-                            std=[0.229, 0.224, 0.225])
-                    ]))
+            assert k_shot == -1
+            print("Return all VisDA training data.")
+            return few_shot_visda_c.VisDA(
+                root=os.path.join(root, 'VisDA'), train=True,
+                transform=transforms.Compose([
+                    transforms.Resize(256),
+                    transforms.CenterCrop(224),
+                    transforms.RandomHorizontalFlip(),
+                    transforms.ToTensor(),
+                    transforms.Normalize(
+                        mean=[0.485, 0.456, 0.406],
+                        std=[0.229, 0.224, 0.225])
+                ]))
 
         else:
             print("Return all VisDA validation data.")
@@ -289,6 +276,11 @@ def get_dataset(root, data_name, imsize, train=True, k_shot=10):
                         mean=[0.485, 0.456, 0.406],
                         std=[0.229, 0.224, 0.225])
                 ]))
+
+    elif data_name == 'VisDA_few_shot':
+            print("Process VisDA validation split and return k-shot VisDA training and test data.")
+            return few_shot_visda_c.FewShotVisDA(
+                root=os.path.join(root, 'VisDA'), k_shot=k_shot)
 
     else:
         raise NotImplementedError

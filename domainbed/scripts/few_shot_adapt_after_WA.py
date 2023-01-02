@@ -71,6 +71,10 @@ def adapt(adaptor, args):
     elif args.target_dataset == 'SVHN':
         train_dataset = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, True, args.k_shot)
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, False)
+    elif args.target_dataset == 'VisDA':
+        visda_dataset = few_shot_datasets.get_dataset(data_dir, 'VisDA_few_shot', k_shot=args.k_shot)
+        train_dataset = visda_dataset.train_dataset
+        test_dataset = visda_dataset.test_dataset
     else:
         raise NotImplementedError
 
