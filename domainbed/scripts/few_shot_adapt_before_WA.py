@@ -91,6 +91,9 @@ def adapt(adaptor, ckpt_folder, hparams, train_args, args):
     elif args.target_dataset == 'SVHN':
         train_dataset = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, True, args.k_shot)
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, False)
+    elif args.target_dataset == 'USPS':
+        train_dataset = few_shot_datasets.get_dataset(data_dir, 'USPS', 64, True, args.k_shot)
+        test_dataset  = few_shot_datasets.get_dataset(data_dir, 'USPS', 64, False)
     elif args.target_dataset == 'VisDA':
         visda_dataset = few_shot_datasets.get_dataset(data_dir, 'VisDA_few_shot', k_shot=args.k_shot)
         train_dataset = visda_dataset.train_dataset
@@ -225,6 +228,8 @@ def wa_test(ckpt_folders, inf_args):
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, False)
     elif inf_args.target_dataset == 'SVHN':
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, False)
+    elif inf_args.target_dataset == 'USPS':
+        test_dataset  = few_shot_datasets.get_dataset(data_dir, 'USPS', 64, False)
     elif inf_args.target_dataset == 'VisDA':
         visda_dataset = few_shot_datasets.get_dataset(data_dir, 'VisDA_few_shot')
         test_dataset = visda_dataset.test_dataset
