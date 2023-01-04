@@ -63,7 +63,7 @@ class FewShotUSPS(torch.utils.data.Dataset):
         return img, target
 
     def __len__(self):
-        return len()
+        return len(self.sample_idx)
 
 
 if __name__ == '__main__':
