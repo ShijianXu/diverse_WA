@@ -11,6 +11,7 @@ import torchvision
 from domainbed import few_shot_mnist_m
 from domainbed import few_shot_svhn
 from domainbed import few_shot_visda_c
+from domainbed import few_shot_usps
 
 #========================================
 #                 utils
@@ -241,7 +242,28 @@ def get_dataset(root, data_name, imsize=64, train=True, k_shot=10):
         else:
             print("Return SVHN test.")
             return torchvision.datasets.SVHN(
-                root=os.path.join(root, 'SVHN'), split='test', download=True,
+                root=os.path.join(root, 'SVHN'), train=False, download=True,
+                transform=transforms.Compose([
+                    transforms.Resize(imsize),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]))
+
+    elif data_name == 'USPS':
+        if train:
+            print("Return k-shot USPS train.")
+            return few_shot_usps.FewShotUSPS(
+                root=os.path.join(root, 'USPS'), train=True, k_shot=k_shot,
+                transform=transforms.Compose([
+                    transforms.Resize(imsize),
+                    transforms.Grayscale(3),
+                    transforms.ToTensor(),
+                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                ]))
+        else:
+            print("Return USPS test.")
+            return torchvision.datasets.USPS(
+                root=os.path.join(root, 'USPS'), split='test', download=True,
                 transform=transforms.Compose([
                     transforms.Resize(imsize),
                     transforms.ToTensor(),

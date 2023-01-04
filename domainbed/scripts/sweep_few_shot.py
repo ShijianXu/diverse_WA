@@ -2,11 +2,14 @@
 # Diverse weight averaging training for MNIST
 python3 -m domainbed.scripts.sweep_few_shot launch \
     --data_dir=../data \
+    --train_data MNIST \
+    --num_classes 10 \
     --output_dir=./MNIST_sweep_diwa_adam \
-    --path_for_init ./MNIST_adam_pretrain.pth \
+    --path_for_init ./mnist_cnn_future_init_adam.pth \
     --command_launcher local \
     --opt_name Adam \
-    --steps 1000 \
+    --model_name CNN \
+    --steps 10000 \
     --check_freq 1000 \
     --n_hparams 10 \
     --n_trials 1 \
@@ -157,7 +160,7 @@ if __name__ == "__main__":
     parser.add_argument('--skip_confirmation', action='store_true')
     parser.add_argument('--path_for_init', type=str, default=None)
     parser.add_argument('--model_name', type=str, default="resnet18")
-    
+
     args = parser.parse_args()
 
     args_list = make_args_list(

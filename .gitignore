@@ -1,4 +1,6 @@
 .DS_Store
+figures/
+*.ipynb
 train_output/
 sweep_output/
 sweep_diwa/
