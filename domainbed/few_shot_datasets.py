@@ -263,9 +263,10 @@ def get_dataset(root, data_name, imsize=64, train=True, k_shot=10):
         else:
             print("Return USPS test.")
             return torchvision.datasets.USPS(
-                root=os.path.join(root, 'USPS'), split='test', download=True,
+                root=os.path.join(root, 'USPS'), train=False, download=True,
                 transform=transforms.Compose([
                     transforms.Resize(imsize),
+                    transforms.Grayscale(3),
                     transforms.ToTensor(),
                     transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
                 ]))
