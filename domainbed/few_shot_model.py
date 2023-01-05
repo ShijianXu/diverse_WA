@@ -76,12 +76,14 @@ class Adaptor(torch.nn.Module):
         self.hparams = hparams
         self.opt_name = opt_name
 
-        if not linear_probe:
-            # fine-tuning the whole network
-            parameters_to_be_optimized = self.classifier.parameters()
-        else:
+        if linear_probe and model_pretrained:
             # linear probing
             parameters_to_be_optimized = self.classifier.fc.parameters()
+            print("Only linear probe the fc layer.")
+        else:
+            # train from scratch or fine-tuning the whole network
+            parameters_to_be_optimized = self.classifier.parameters()
+            print("Tuning the whole network.")
 
         if self.opt_name == 'Adam':
             self.optimizer = torch.optim.Adam(
