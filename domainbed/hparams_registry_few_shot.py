@@ -16,10 +16,10 @@ def _hparams(opt_name, random_seed, data_name):
         print(f"rand hparam {name} with value {hparams[name]}")
 
     if data_name == 'VisDA':
-        _hparam('lr', 5e-4, lambda r: r.choice([5e-4, 1e-5, 5e-5]))
+        _hparam('lr', 1e-4, lambda r: r.choice([5e-4, 1e-5, 5e-5]))
     else:
-        _hparam('lr', 5e-4, lambda r: r.choice([1e-4, 3e-4, 5e-4]))
-        
+        _hparam('lr', 1e-4, lambda r: r.choice([3e-4, 1e-4, 7e-5, 5e-5]))
+
     _hparam('weight_decay', 0, lambda r: r.choice([1e-4, 1e-6]))
     _hparam('batch_size', 32, lambda r: 32)
 
