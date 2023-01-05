@@ -213,6 +213,7 @@ if __name__ == "__main__":
 
 
     if args.linear_probe:
+        print("Saving model for future init.")
         adaptor.save_path_for_future_init(args.path_for_init)
         
     save_checkpoint('model.pkl')
