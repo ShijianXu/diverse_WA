@@ -52,8 +52,10 @@ class Adaptor(torch.nn.Module):
                 self.classifier = torchvision.models.resnet18(pretrained=True)
                 num_ftrs = self.classifier.fc.in_features
                 self.classifier.fc = nn.Linear(num_ftrs, num_classes)
+                print("Define ResNet18 with pretrained weights.")
             else:
                 self.classifier = torchvision.models.resnet18(num_classes=num_classes)
+                print("Define ResNet18 without pretrained weights.")
         elif model_name == 'resnet50':
             if model_pretrained:
                 self.classifier = torchvision.models.resnet50(pretrained=True)

@@ -2,9 +2,12 @@
 # train baseline
 python3 -m domainbed.scripts.few_shot_train \
     --data_dir=../data \
+    --train_data MNIST \
+    --num_classes 10 \
     --opt_name Adam \
-    --output_dir=./mnist_pretrain \
-    --path_for_init ./mnist_future_init.pth \
+    --model_name resnet18 \
+    --output_dir=./mnist_res18_pretrain \
+    --path_for_init ./mnist_res18_future_init_adam.pth \
     --steps 500 \
     --check_freq 5 \
     --linear_probe
