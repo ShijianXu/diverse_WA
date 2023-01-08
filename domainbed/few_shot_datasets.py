@@ -233,7 +233,7 @@ def get_dataset(root, data_name, imsize=64, train=True, k_shot=10):
             if k_shot == -1:
                 print("Return all SVHN train.")
                 return torchvision.datasets.SVHN(
-                    root=os.path.join(root, 'SVHN'), train=True, download=True,
+                    root=os.path.join(root, 'SVHN'), split='train', download=True,
                     transform=transforms.Compose([
                         transforms.Resize(imsize),
                         transforms.ToTensor(),
@@ -251,7 +251,7 @@ def get_dataset(root, data_name, imsize=64, train=True, k_shot=10):
         else:
             print("Return SVHN test.")
             return torchvision.datasets.SVHN(
-                root=os.path.join(root, 'SVHN'), train=False, download=True,
+                root=os.path.join(root, 'SVHN'), split='test', download=True,
                 transform=transforms.Compose([
                     transforms.Resize(imsize),
                     transforms.ToTensor(),
