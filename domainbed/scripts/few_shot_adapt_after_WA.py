@@ -10,7 +10,8 @@ python3 -m domainbed.scripts.few_shot_adapt_after_WA \
     --opt_name Adam \
     --sam_rho 0.05 \
     --k_shot 10 \
-    --steps 100
+    --steps 100 \
+    --test_freq 10
 """
 
 import argparse
@@ -121,6 +122,7 @@ def adapt(adaptor, args):
     print("Training steps: ", n_steps)
     adaptor.train()
     
+    best_acc = 0
     start_step = 0
     for step in range(start_step, n_steps):
         minibatches_device = [(x.to(device), y.to(device))
@@ -129,13 +131,16 @@ def adapt(adaptor, args):
         # update
         step_vals = adaptor.update(minibatches_device)
 
-    # test 
-    print("Testing again ...")
-    adaptor.eval()
-    acc = misc.accuracy(adaptor, eval_loader, None, device)
-    print("After few shot adaptation, the accuracy is: ", acc)
+        if step % args.test_freq == 0:
+            # test 
+            print("Testing again ...")
+            adaptor.eval()
+            acc = misc.accuracy(adaptor, eval_loader, None, device)
 
-    save_checkpoint('model.pkl')
+            if acc > best_acc:
+                print(f"A better accuracy after {step} adaptation steps: {acc}.")
+                best_acc = acc
+                save_checkpoint('model.pkl')
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')
@@ -152,6 +157,7 @@ def _get_args():
     parser.add_argument('--sam_rho', type=float, default=0.05)
     parser.add_argument('--k_shot', type=int, default=10)
     parser.add_argument('--steps', type=int, default=100)
+    parser.add_argument('--test_freq', type=int, default=10)
 
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
