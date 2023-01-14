@@ -23,7 +23,10 @@ if __name__ == '__main__':
     
     model_path = './mnist_cnn_adam_adapt_2_svhn_10_shot/model.pkl'
     save_dict = torch.load(model_path, map_location=torch.device(device))
-    missing_keys, unexpected_keys =  model.load_state_dict(save_dict["model_dict"], strict=False)
+    state_dict = save_dict["model_dict"]
+    new_state_dict = {key.replace("classifier.", "network_wa."): value for key, value in state_dict.items()}    
+
+    missing_keys, unexpected_keys =  model.load_state_dict(new_state_dict, strict=False)
     print(f"Load individual model with missing keys {missing_keys} and unexpected keys {unexpected_keys}.")
 
     test_dataset  = few_shot_datasets.get_dataset("../data", 'SVHN', 64, False)
@@ -32,6 +35,7 @@ if __name__ == '__main__':
         batch_size=64,
         num_workers=2)
 
+    model.to(device=device)
     model.eval()
     acc = misc.accuracy(model, eval_loader, None, device)
     print(acc)
