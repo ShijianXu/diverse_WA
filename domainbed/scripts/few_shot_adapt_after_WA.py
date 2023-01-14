@@ -131,16 +131,25 @@ def adapt(adaptor, args):
         # update
         step_vals = adaptor.update(minibatches_device)
 
-        if step % args.test_freq == 0:
-            # test 
-            print("Testing again ...")
-            adaptor.eval()
-            acc = misc.accuracy(adaptor, eval_loader, None, device)
+        if args.test_freq != -1:
+            if step % args.test_freq == 0:
+                # test 
+                print("Testing again ...")
+                adaptor.eval()
+                acc = misc.accuracy(adaptor, eval_loader, None, device)
 
-            if acc > best_acc:
-                print(f"A better accuracy after {step} adaptation steps: {acc}.")
-                best_acc = acc
-                save_checkpoint('model.pkl')
+                if acc > best_acc:
+                    print(f"A better accuracy after {step} adaptation steps: {acc}.")
+                    best_acc = acc
+                    save_checkpoint('model.pkl')
+    
+    if args.test_freq == -1:
+        print("Test again after adaptation ...")
+        adaptor.eval()
+        acc = misc.accuracy(adaptor, eval_loader, None, device)
+        print(f"Accuracy after {n_steps} adaptation steps: {acc}.")
+
+    save_checkpoint('model.pkl')
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')
@@ -157,7 +166,7 @@ def _get_args():
     parser.add_argument('--sam_rho', type=float, default=0.05)
     parser.add_argument('--k_shot', type=int, default=10)
     parser.add_argument('--steps', type=int, default=100)
-    parser.add_argument('--test_freq', type=int, default=10)
+    parser.add_argument('--test_freq', type=int, default=-1)
 
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
