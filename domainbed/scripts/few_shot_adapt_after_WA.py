@@ -148,8 +148,7 @@ def adapt(adaptor, args):
         adaptor.eval()
         acc = misc.accuracy(adaptor, eval_loader, None, device)
         print(f"Accuracy after {n_steps} adaptation steps: {acc}.")
-
-    save_checkpoint('model.pkl')
+        save_checkpoint('model.pkl')
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')
