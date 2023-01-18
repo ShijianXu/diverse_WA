@@ -71,9 +71,11 @@ class ResNet(torch.nn.Module):
     def __init__(self, input_shape, hparams):
         super(ResNet, self).__init__()
         if hparams['resnet18']:
+            print("Using Pretrained ResNet18.")
             self.network = torchvision.models.resnet18(pretrained=True)
             self.n_outputs = 512
         else:
+            print("Using pretrained ResNet50.")
             self.network = torchvision.models.resnet50(pretrained=True)
             self.n_outputs = 2048
 
@@ -184,12 +186,17 @@ class ContextNet(nn.Module):
 def Featurizer(input_shape, hparams):
     """Auto-select an appropriate featurizer for the given input shape."""
     if len(input_shape) == 1:
+        print("Using MLP as Featurizer.")
         return MLP(input_shape[0], hparams["mlp_width"], hparams)
     elif input_shape[1:3] == (28, 28):
+        print("Uning MNIST_CNN as Featurizer.")
         return MNIST_CNN(input_shape)
     elif input_shape[1:3] == (32, 32):
-        return wide_resnet.Wide_ResNet(input_shape, 16, 2, 0.)
+        print("Using wide_resnet as Featurizer.")
+        # return wide_resnet.Wide_ResNet(input_shape, 16, 2, 0.)
+        return ResNet(input_shape, hparams)
     elif input_shape[1:3] == (224, 224):
+        print("Using ResNet as Featurizer.")
         return ResNet(input_shape, hparams)
     else:
         raise NotImplementedError
