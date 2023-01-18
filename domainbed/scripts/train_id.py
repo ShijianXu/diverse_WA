@@ -144,7 +144,7 @@ if __name__ == "__main__":
         transforms.Normalize(
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
-    num_workers = 4
+    num_workers = 1
     
     train_dataset = torchvision.datasets.CIFAR100(root="../data", train=True, download=True, transform=augment_transform)
     test_dataset = torchvision.datasets.CIFAR100(root="../data", train=False, download=True, transform=test_transform)
