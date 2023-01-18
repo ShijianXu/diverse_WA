@@ -119,15 +119,16 @@ if __name__ == "__main__":
 
     # TODO
     test_transform = transforms.Compose([
-        transforms.Resize((224,224)),
+        # transforms.Resize((224,224)),
+        transforms.Resize((32, 32)),
         transforms.ToTensor(),
         transforms.Normalize(
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
 
     augment_transform = transforms.Compose([
-        # transforms.Resize((224,224)),
-        transforms.RandomResizedCrop(224, scale=(0.7, 1.0)),
+        # transforms.RandomResizedCrop(224, scale=(0.7, 1.0)),
+        transforms.RandomResizedCrop(32, scale=(0.7, 1.0)),
         transforms.RandomHorizontalFlip(),
         transforms.ColorJitter(0.3, 0.3, 0.3, 0.3),
         transforms.RandomGrayscale(),
@@ -157,7 +158,8 @@ if __name__ == "__main__":
     print("eval_loader_names: ", eval_loader_names)
 
 
-    INPUT_SHAPE = (3, 224, 224)
+    # INPUT_SHAPE = (3, 224, 224)
+    INPUT_SHAPE = (3, 32, 32)
     N_CLASSES = 100
     N_DOMAINS = 1
     algorithm_class = algorithms.get_algorithm_class(args.algorithm)
