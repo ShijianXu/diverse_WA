@@ -120,9 +120,11 @@ class SAM(Algorithm):
         ## DiWA choose weights to be optimized ##
         if not init_step:
             parameters_to_be_optimized = self.network.parameters()
+            print("Finetuning the whole network.")
         else:
             # linear probing
             parameters_to_be_optimized = self.classifier.parameters()
+            print("Only linear probing the classifier.")
 
         # base_optimizer = torch.optim.SGD
         # self.optimizer = SAMin(

@@ -10,6 +10,7 @@ domainbed/lib/__pycache__/*
 rsync.sh
 *.pth
 *.pkl
+*.npy
 mnist_pretrain/
 mnist_adam_2_mnistm_adam_10_shot/
 mnist_adam_2_mnistm_sam_10_shot/
@@ -21,3 +22,5 @@ mnist_res18_sweep_diwa_sam/
 mnist_res18_sweep_diwa_adam/
 mnist_res18_adam_diwa_2_svhn_adam_10_shot/
 mnist_res18_sam_diwa_2_mnistm_sam_10_shot/
+mnist_res18_imagenet_sweep_diwa_sam/
+*_adapt_2_*/

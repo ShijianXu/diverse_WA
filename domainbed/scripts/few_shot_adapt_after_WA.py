@@ -141,14 +141,14 @@ def adapt(adaptor, args):
                 if acc > best_acc:
                     print(f"A better accuracy after {step} adaptation steps: {acc}.")
                     best_acc = acc
-                    save_checkpoint('model.pkl')
+                    save_checkpoint('adapted_model.pkl')
     
     if args.test_freq == -1:
         print("Test again after adaptation ...")
         adaptor.eval()
         acc = misc.accuracy(adaptor, eval_loader, None, device)
         print(f"Accuracy after {n_steps} adaptation steps: {acc}.")
-        save_checkpoint('model.pkl')
+        save_checkpoint('adapted_model.pkl')
 
     with open(os.path.join(args.output_dir, 'done'), 'w') as f:
         f.write('done')
