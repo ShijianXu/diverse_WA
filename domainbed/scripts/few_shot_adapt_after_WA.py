@@ -37,7 +37,7 @@ def source_test(adaptor, args):
     eval_loader = FastDataLoader(
         dataset=test_dataset,
         batch_size=32,
-        num_workers=2)
+        num_workers=1)
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
     adaptor.to(device)
@@ -89,12 +89,12 @@ def adapt(adaptor, args):
         dataset=train_dataset,
         weights=None,
         batch_size=8,
-        num_workers=2)
+        num_workers=1)
 
     eval_loader = FastDataLoader(
         dataset=test_dataset,
         batch_size=64,
-        num_workers=2)
+        num_workers=1)
 
     train_minibatches_iterator = zip(train_loader)
     n_steps = args.steps
