@@ -25,4 +25,6 @@ mnist_res18_sam_diwa_2_mnistm_sam_10_shot/
 mnist_res18_imagenet_sweep_diwa_sam/
 usps_res18_imagenet_sweep_diwa_adam/
 usps_res18_imagenet_sweep_diwa_sam/
+usps_res18_imagenet_sam_pretrain/
+usps_res18_imagenet_sweep_diwa_sam_2_models/
 *_adapt_2_*/

@@ -44,6 +44,8 @@ class Adaptor(torch.nn.Module):
         super(Adaptor, self).__init__()
         self.channels = channels
         self.num_classes = num_classes
+
+        device = "cuda" if torch.cuda.is_available() else "cpu"
         
         if model_name == 'CNN':
             self.classifier = CNN(self.channels, self.num_classes)
@@ -68,7 +70,7 @@ class Adaptor(torch.nn.Module):
 
         if path_for_init is not None:
             if os.path.exists(path_for_init):
-                self.classifier.load_state_dict(torch.load(path_for_init))
+                self.classifier.load_state_dict(torch.load(path_for_init, map_location=torch.device(device)))
                 print(f"Loaded linear probed shared init model {path_for_init}.")
             else:
                 assert linear_probe, "Your initialization has not been saved yet"

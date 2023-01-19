@@ -1,0 +1,14 @@
+python3 -m domainbed.scripts.sweep_few_shot launch \
+    --data_dir=../data \
+    --output_dir=./usps_res18_imagenet_sweep_diwa_sam_2_models \
+    --train_data USPS \
+    --num_classes 10 \
+    --path_for_init ./usps_res18_imagenet_future_init_sam.pth \
+    --command_launcher local \
+    --model_name resnet18 \
+    --opt_name SAM \
+    --steps 2000 \
+    --check_freq 200 \
+    --n_hparams 2 \
+    --n_trials 1 \
+    --skip_confirmation

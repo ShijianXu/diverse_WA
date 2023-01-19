@@ -106,12 +106,12 @@ if __name__ == "__main__":
         dataset=train_dataset,
         weights=None,
         batch_size=hparams['batch_size'],
-        num_workers=2)
+        num_workers=1)
 
     eval_loader = FastDataLoader(
         dataset=test_dataset,
         batch_size=hparams['batch_size'],
-        num_workers=2)
+        num_workers=1)
     
     adaptor = Adaptor(
         channels=3, 
