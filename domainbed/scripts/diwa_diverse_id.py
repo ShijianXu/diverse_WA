@@ -85,6 +85,7 @@ def get_wa_results(good_checkpoints, dataset, device):
         device = "cpu"
 
     INPUT_SHAPE = (3, 224, 224)
+    # INPUT_SHAPE = (3, 32, 32)
     N_CLASSES = 100
     N_DOMAINS = 1
     wa_algorithm = algorithms_inference.DiWA(
@@ -104,7 +105,8 @@ def get_wa_results(good_checkpoints, dataset, device):
             save_dict["model_hparams1"],
             save_dict["model_hparams2"],
         )
-        algorithm.load_state_dict(save_dict["model_dict"], strict=False)
+        missing_keys, unexpected_keys = algorithm.load_state_dict(save_dict["model_dict"], strict=False)
+        print(f"Load individual model with missing keys {missing_keys} and unexpected keys {unexpected_keys}.")
         
         wa_algorithm.add_weights(algorithm.network1)
         wa_algorithm.add_weights(algorithm.network2)
@@ -121,7 +123,7 @@ def get_wa_results(good_checkpoints, dataset, device):
     loader = FastDataLoader(
             dataset=dataset,
             batch_size=64,
-            num_workers=4)
+            num_workers=1)
 
     dict_results = {}
     dict_results["acc"] = misc.accuracy(wa_algorithm, loader, None, device)
@@ -144,6 +146,7 @@ def main():
 
     test_transform = transforms.Compose([
         transforms.Resize((224,224)),
+        # transforms.Resize((32,32)),
         transforms.ToTensor(),
         transforms.Normalize(
         mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])

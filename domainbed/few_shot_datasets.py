@@ -9,6 +9,7 @@ from torch.utils.data import Dataset
 import torchvision
 
 from domainbed import few_shot_mnist_m
+from domainbed import few_shot_mnist
 from domainbed import few_shot_svhn
 from domainbed import few_shot_visda_c
 from domainbed import few_shot_usps
@@ -186,15 +187,27 @@ class PACS(SingleEnvironmentDatasets):
 def get_dataset(root, data_name, imsize=64, train=True, k_shot=10):
     if data_name == 'MNIST':
         if train:
-            print("Return MNIST train.")
-            return torchvision.datasets.MNIST(
-                root=root, train=True, download=True,
-                transform=transforms.Compose([
-                    transforms.Resize(imsize),
-                    transforms.Grayscale(3),
-                    transforms.ToTensor(),
-                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
-                ]))
+            if k_shot == -1:
+                print("Return all MNIST train.")
+                return torchvision.datasets.MNIST(
+                    root=root, train=True, download=True,
+                    transform=transforms.Compose([
+                        transforms.Resize(imsize),
+                        transforms.Grayscale(3),
+                        transforms.ToTensor(),
+                        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                    ]))
+            else:
+                print("Return k-shot MNIST train.")
+                return few_shot_mnist.FewShotMNIST(
+                    root=root, train=True,
+                    k_shot=k_shot,
+                    transform=transforms.Compose([
+                        transforms.Resize(imsize),
+                        transforms.Grayscale(3),
+                        transforms.ToTensor(),
+                        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
+                    ]))
         else:
             print("Return MNIST test.")
             return torchvision.datasets.MNIST(

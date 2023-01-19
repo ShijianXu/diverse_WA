@@ -69,7 +69,10 @@ def adapt(adaptor, args):
 
     data_dir = os.path.abspath(args.data_dir)
 
-    if args.target_dataset == 'MNISTM':
+    if args.target_dataset == 'MNIST':
+        train_dataset = few_shot_datasets.get_dataset(data_dir, 'MNIST', 64, True, args.k_shot)
+        test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNIST', 64, False)
+    elif args.target_dataset == 'MNISTM':
         train_dataset = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, True, args.k_shot)
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, False)
     elif args.target_dataset == 'SVHN':
