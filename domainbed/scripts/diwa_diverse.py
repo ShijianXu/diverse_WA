@@ -125,8 +125,8 @@ def get_wa_results(good_checkpoints, dataset, data_names, data_splits, device):
             save_dict["model_hparams1"],
             save_dict["model_hparams2"],
         )
-        algorithm.load_state_dict(save_dict["model_dict"], strict=False)
-
+        missing_keys, unexpected_keys = algorithm.load_state_dict(save_dict["model_dict"], strict=False)
+        print(f"Loading individual models with missing_keys: {missing_keys}, unexpected_keys: {unexpected_keys}.")
         
         wa_algorithm.add_weights(algorithm.network1)
         wa_algorithm.add_weights(algorithm.network2)
