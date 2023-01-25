@@ -250,7 +250,7 @@ def main():
                 np.random.shuffle(checkpoints)
                 
                 dict_results = get_wa_results(
-                    checkpoints[:2*inf_args.num_models], dataset, data_names, data_splits, device
+                    checkpoints[:inf_args.num_models], dataset, data_names, data_splits, device
                 )
                 print_results(dict_results)
 
