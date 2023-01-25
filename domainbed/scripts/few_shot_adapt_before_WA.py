@@ -40,6 +40,7 @@ def _get_args():
     parser.add_argument('--sam_rho', type=float, default=0.05)
     parser.add_argument('--k_shot', type=int, default=10)
     parser.add_argument('--steps', type=int, default=100)
+    parser.add_argument('--test_freq', type=int, default=-1)
 
     parser.add_argument('--skip_model_save', action='store_true')
     parser.add_argument('--save_model_every_checkpoint', action='store_true')
@@ -108,12 +109,12 @@ def adapt(adaptor, ckpt_folder, hparams, train_args, args):
         dataset=train_dataset,
         weights=None,
         batch_size=8,
-        num_workers=2)
+        num_workers=1)
 
     eval_loader = FastDataLoader(
         dataset=test_dataset,
         batch_size=64,
-        num_workers=2)
+        num_workers=1)
 
     train_minibatches_iterator = zip(train_loader)
     n_steps = args.steps
@@ -142,6 +143,7 @@ def adapt(adaptor, ckpt_folder, hparams, train_args, args):
     print("Training steps: ", n_steps)
     adaptor.train()
     
+    best_acc = 0
     start_step = 0
     for step in range(start_step, n_steps):
         minibatches_device = [(x.to(device), y.to(device))
@@ -150,15 +152,27 @@ def adapt(adaptor, ckpt_folder, hparams, train_args, args):
         # update
         step_vals = adaptor.update(minibatches_device)
 
+        if args.test_freq != -1:
+            if step % args.test_freq == 0:
+                # test 
+                print("Testing again ...")
+                adaptor.eval()
+                acc = misc.accuracy(adaptor, eval_loader, None, device)
+
+                if acc > best_acc:
+                    print(f"A better accuracy after {step} adaptation steps: {acc}.")
+                    best_acc = acc
+                    save_checkpoint('adapted_model.pkl')
+
     # test 
-    print("Testing again ...")
-    adaptor.eval()
-    acc_after = misc.accuracy(adaptor, eval_loader, None, device)
-    print("After few shot adaptation, the accuracy is: ", acc_after)
+    if args.test_freq == -1:
+        print("Test again after adaptation ...")
+        adaptor.eval()
+        best_acc = misc.accuracy(adaptor, eval_loader, None, device)
+        print(f"Accuracy after {n_steps} adaptation steps: {acc}.")
+        save_checkpoint('adapted_model.pkl')
 
-    save_checkpoint('adapted_model.pkl')
-
-    return acc_before, acc_after
+    return acc_before, best_acc
 
 
 def individual_adapt(ckpt_folders, args):
