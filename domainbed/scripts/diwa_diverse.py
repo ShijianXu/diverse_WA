@@ -244,7 +244,7 @@ def main():
             checkpoints = list(checkpoints_folders.keys())
 
             np.random.seed(42)
-            for i in range(len(inf_args.num_trials)):
+            for i in range(inf_args.num_trials):
                 print(f"The {i}-th random weight averaing")
                 np.random.shuffle(checkpoints)
                 
