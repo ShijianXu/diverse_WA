@@ -85,7 +85,10 @@ def adapt(adaptor, ckpt_folder, hparams, train_args, args):
 
     data_dir = os.path.abspath(args.data_dir)
 
-    if args.target_dataset == 'MNISTM':
+    if args.target_dataset == 'MNIST':
+        train_dataset = few_shot_datasets.get_dataset(data_dir, 'MNIST', 64, True, args.k_shot)
+        test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNIST', 64, False)
+    elif args.target_dataset == 'MNISTM':
         train_dataset = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, True, args.k_shot)
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, False)
     elif args.target_dataset == 'SVHN':
@@ -224,7 +227,9 @@ def wa_test(ckpt_folders, inf_args):
 
     data_dir = os.path.abspath(inf_args.data_dir)
 
-    if inf_args.target_dataset == 'MNISTM':
+    if inf_args.target_dataset == 'MNIST':
+        test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNIST', 64, False)
+    elif inf_args.target_dataset == 'MNISTM':
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'MNISTM', 64, False)
     elif inf_args.target_dataset == 'SVHN':
         test_dataset  = few_shot_datasets.get_dataset(data_dir, 'SVHN', 64, False)
