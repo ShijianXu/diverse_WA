@@ -5,6 +5,8 @@ python3 -m domainbed.scripts.diwa_diverse \
        --dataset PACS \
        --test_env 3 \
        --weight_selection uniform \
+       --num_models 2 \
+       --num_trials 3 \
        --trial_seed -1
 """
 
@@ -32,6 +34,9 @@ def _get_args():
 
     # select which checkpoints
     parser.add_argument('--weight_selection', type=str, default="uniform") # or "restricted"
+    parser.add_argument('--num_models', type=int, default=-1, help='number of models used for averaging')
+    parser.add_argument('--num_trials', type=int, default=-1, help='number of times to do the weight averaging, used for report mean, variance values')
+
     parser.add_argument(
         '--trial_seed',
         type=int,
@@ -68,7 +73,7 @@ def create_splits(domain, inf_args, dataset, _filter):
     return splits
 
 
-def get_dict_folder_to_score(inf_args, device):
+def get_checkpoints_folders(inf_args, device):
     output_folders = [
         os.path.join(output_dir, path)
         for output_dir in inf_args.output_dir.split(",")
@@ -79,7 +84,7 @@ def get_dict_folder_to_score(inf_args, device):
         if os.path.isdir(output_folder) and "done" in os.listdir(output_folder) and "model.pkl" in os.listdir(output_folder)
     ]
 
-    dict_folder_to_score = {}
+    checkpoints_folders = {}
     for folder in output_folders:
         # model_path = os.path.join(folder, "model.pkl")
         # save_dict = torch.load(model_path, map_location=torch.device(device))
@@ -99,11 +104,11 @@ def get_dict_folder_to_score(inf_args, device):
         # print(f"Found: {folder} with score: {score}")
 
         score = 0
-        dict_folder_to_score[folder] = score
+        checkpoints_folders[folder] = score
 
-    if len(dict_folder_to_score) == 0:
+    if len(checkpoints_folders) == 0:
         raise ValueError(f"No folders found for: {inf_args}")
-    return dict_folder_to_score
+    return checkpoints_folders
 
 
 def get_wa_results(good_checkpoints, dataset, data_names, data_splits, device):
@@ -180,7 +185,7 @@ def main():
         raise NotImplementedError
 
     # load individual folders and their corresponding scores on train_out
-    dict_folder_to_score = get_dict_folder_to_score(inf_args, device)
+    checkpoints_folders = get_checkpoints_folders(inf_args, device)
 
     # load data: test and optionally train_out for restricted weight selection
     data_splits, data_names = [], []
@@ -202,7 +207,7 @@ def main():
         # Restricted weight selection
 
         ## sort individual members by decreasing accuracy on train_out
-        sorted_checkpoints = sorted(dict_folder_to_score.keys(), key=lambda x: dict_folder_to_score[x], reverse=True)
+        sorted_checkpoints = sorted(checkpoints_folders.keys(), key=lambda x: checkpoints_folders[x], reverse=True)
         selected_indexes = []
         best_result = -float("inf")
         dict_best_results = {}
@@ -232,10 +237,28 @@ def main():
         print_results(dict_best_results)
 
     elif inf_args.weight_selection == "uniform":
-        dict_results = get_wa_results(
-            list(dict_folder_to_score.keys()), dataset, data_names, data_splits, device
-        )
-        print_results(dict_results)
+
+        # using randomly selected weight averaing
+        if inf_args.num_models != -1:
+            print(f"{inf_args.num_models} models will be used for weight averaging")
+            checkpoints = list(checkpoints_folders.keys())
+
+            np.random.seed(42)
+            for i in range(len(inf_args.num_trials)):
+                print(f"The {i}-th random weight averaing")
+                np.random.shuffle(checkpoints)
+                
+                dict_results = get_wa_results(
+                    checkpoints, dataset, data_names, data_splits, device
+                )
+                print_results(dict_results)
+
+        # using all the available models for weight averaging
+        else:
+            dict_results = get_wa_results(
+                list(checkpoints_folders.keys()), dataset, data_names, data_splits, device
+            )
+            print_results(dict_results)
 
     else:
         raise ValueError(inf_args.weight_selection)
