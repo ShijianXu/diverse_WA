@@ -113,6 +113,7 @@ def get_checkpoints_folders(inf_args, device):
 
 def get_wa_results(good_checkpoints, dataset, data_names, data_splits, device):
     print(good_checkpoints)
+    print(f"number of models: {2*len(good_checkpoints)}")
 
     wa_algorithm = algorithms_inference.DiWA(
         dataset.input_shape,
@@ -240,7 +241,7 @@ def main():
 
         # using randomly selected weight averaing
         if inf_args.num_models != -1:
-            print(f"{inf_args.num_models} models will be used for weight averaging")
+            print(f"{2*inf_args.num_models} models will be used for weight averaging")
             checkpoints = list(checkpoints_folders.keys())
 
             np.random.seed(42)
@@ -249,7 +250,7 @@ def main():
                 np.random.shuffle(checkpoints)
                 
                 dict_results = get_wa_results(
-                    checkpoints, dataset, data_names, data_splits, device
+                    checkpoints[:2*inf_args.num_models], dataset, data_names, data_splits, device
                 )
                 print_results(dict_results)
 
