@@ -14,7 +14,9 @@ from domainbed.few_shot_model import Adaptor, DiWA_Adaptor
 # model = 'usps_res18_imagenet_sweep_diwa_sam/ca208d518eaa13fa7726eef1bcdeea06/model_best.pkl'
 
 # resnet18, imagenet pretrained, weight averaged then 10-shot adapt on mnist-m
-model = 'usps_res18_imagenet_sam_adapt_2_mnist_10_shot/adapted_model.pkl'
+# model = 'usps_res18_imagenet_sam_adapt_2_mnist_10_shot/adapted_model.pkl'
+model = 'adapted_model_m_2_s.pkl'
+
 hparams = {}
 hparams['lr'] = 5e-4
 hparams['rho'] = 0.05
@@ -34,15 +36,16 @@ network = Adaptor(
     )
 state_dict = save_dict["model_dict"]
 
-new_state_dict = {key.replace("network_wa.", "classifier."): value for key, value in state_dict.items()}  
-missing_keys, unexpected_keys =  network.load_state_dict(new_state_dict, strict=False)
+# new_state_dict = {key.replace("network_wa.", "classifier."): value for key, value in state_dict.items()}  
+# missing_keys, unexpected_keys =  network.load_state_dict(new_state_dict, strict=False)
 
-# missing_keys, unexpected_keys =  network.load_state_dict(state_dict, strict=False)
+missing_keys, unexpected_keys =  network.load_state_dict(state_dict, strict=False)
 print(f"Load individual model with missing keys {missing_keys} and unexpected keys {unexpected_keys}.")
 
+
 # test_dataset  = few_shot_datasets.get_dataset('../data', 'MNISTM', 64, False)
-# test_dataset  = few_shot_datasets.get_dataset('../data', 'SVHN', 64, False)
-test_dataset  = few_shot_datasets.get_dataset('../data', 'MNIST', 64, False)
+test_dataset  = few_shot_datasets.get_dataset('../data', 'SVHN', 64, False)
+# test_dataset  = few_shot_datasets.get_dataset('../data', 'USPS', 64, False)
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=64, shuffle=True)
 
 features = []
@@ -74,7 +77,7 @@ labels = np.concatenate(labels)
 print(features.shape)
 print(labels.shape)
 
-with open('feature_usps_2_mnist_adapt_after_wa.npy', 'wb') as f:
+with open('feature_m2s_single_adapted.npy', 'wb') as f:
     np.save(f, features)
-with open('label_usps_2_mnist_adapt_after_wa.npy', 'wb') as f:
+with open('label_m2s_single_adapted.npy', 'wb') as f:
     np.save(f, labels)

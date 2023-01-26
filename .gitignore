@@ -27,4 +27,5 @@ usps_res18_imagenet_sweep_diwa_adam/
 usps_res18_imagenet_sweep_diwa_sam/
 usps_res18_imagenet_sam_pretrain/
 usps_res18_imagenet_sweep_diwa_sam_2_models/
+svhn_res18_imagenet_sweep_diwa_sam/
 *_adapt_2_*/
