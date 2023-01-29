@@ -99,8 +99,13 @@ if __name__ == "__main__":
 
     data_dir = os.path.abspath(args.data_dir)
 
-    train_dataset = few_shot_datasets.get_dataset(data_dir, args.train_data, 64, True, k_shot=-1)
-    test_dataset  = few_shot_datasets.get_dataset(data_dir, args.train_data, 64, False, k_shot=-1)
+    if args.train_data == 'VisDA':
+        visda_dataset = few_shot_datasets.get_dataset(data_dir, args.train_data, 64, True, k_shot=-1)
+        train_dataset = visda_dataset.train_dataset
+        test_dataset = visda_dataset.test_datas
+    else:
+        train_dataset = few_shot_datasets.get_dataset(data_dir, args.train_data, 64, True, k_shot=-1)
+        test_dataset  = few_shot_datasets.get_dataset(data_dir, args.train_data, 64, False, k_shot=-1)
 
     train_loader = InfiniteDataLoader(
         dataset=train_dataset,

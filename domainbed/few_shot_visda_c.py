@@ -65,6 +65,8 @@ class FewShotVisDA():
         mapping = list(map(lambda x: (x[0], int(x[1])), [c.strip().split() for c in content]))
         print(f"Total {len(mapping)} validation samples.")
 
+        np.random.shuffle(mapping)
+
         self.few_samples = []
         for i in range(12):
             cnt = 0
@@ -85,31 +87,24 @@ class FewShotVisDA():
 
 
 class VisDA(torch.utils.data.Dataset):
-    def __init__(self, root, train=True, transform=None):
+    def __init__(self, root):
         super().__init__()
 
-        self.root = root
-        self.transform = transform
-
-        if train:
-            self.image_dir = os.path.join(root, 'train')
-            labels_file = os.path.join(root, 'train', 'image_list.txt')
-        else:
-            self.image_dir = os.path.join(root, 'validation')
-            labels_file = os.path.join(root, 'validation', 'image_list.txt')
+        self.image_dir = os.path.join(root, 'train')
+        labels_file = os.path.join(root, 'train', 'image_list.txt')
 
         with open(labels_file, "r") as fp:
             content = fp.readlines()
         self.mapping = list(map(lambda x: (x[0], int(x[1])), [c.strip().split() for c in content]))
 
-    def __len__(self):
-        return len(self.mapping)
+        np.random.shuffle(self.mapping)
 
-    def __getitem__(self, idx):
-        image, label = self.mapping[idx]
-        image = os.path.join(self.image_dir, image)
-        image = self.transform(Image.open(image).convert('RGB'))
-        return image, label
+        total_samples = len(self.mapping)
+        train_split = self.mapping[:int(0.8*total_samples)]
+        test_split = self.mapping[int(0.8*total_samples):]
+
+        self.train_dataset = CustomDataset(train_split, self.image_dir, train=True)
+        self.test_dataset = CustomDataset(test_split, self.image_dir, train=False)
 
 
 if __name__ == '__main__':
