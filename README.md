@@ -208,3 +208,7 @@ python3 -m domainbed.scripts.few_shot_adapt_after_WA \
   ```
 
 - Experiments show that adaptation after weight averaging can achieve better performance.
+
+
+
+The code is based on [https://github.com/alexrame/diwa](https://github.com/alexrame/diwa).
