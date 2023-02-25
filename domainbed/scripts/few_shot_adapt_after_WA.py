@@ -298,7 +298,9 @@ def main():
     print(model_folders)
 
     hparams = {}
-    hparams['lr'] = 5e-4
+    # hparams['lr'] = 5e-4
+    hparams['lr'] = 5e-5        # smaller lr ???
+    
     hparams['rho'] = inf_args.sam_rho
     hparams['weight_decay'] = 5e-4
     hparams['batch_size'] = 8
