@@ -261,9 +261,8 @@ def get_wa_model_diverse(ckpt_folders, hparams, args, device):
     )
 
     for folder in ckpt_folders:
-        save_dict = torch.load(os.path.join(folder, "model_best.pkl"), map_location=torch.device(device))
+        save_dict = torch.load(os.path.join(folder, "model.pkl"), map_location=torch.device(device))
         train_args = save_dict["args"]
-        hparams = save_dict["model_hparams"]
 
         # load individual weights
         algorithm = ERM_2(
