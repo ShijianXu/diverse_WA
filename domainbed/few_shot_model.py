@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torchvision
 
 from domainbed.sam import SAMin
+from domainbed import networks
 from torch.nn.modules.batchnorm import _BatchNorm
 
 import copy
@@ -37,6 +38,33 @@ class CNN(nn.Module):
         output = output.view(output.size(0), -1)
         output = self.fc(output)
         return output
+
+
+class ERM_2(nn.Module):
+
+    def __init__(self, num_classes, hparams1, hparams2):
+        super(ERM_2, self).__init__()
+
+        self.hparams1 = hparams1
+        self.hparams2 = hparams2
+
+        input_shape = (3, 224, 224,)
+
+        # model_1
+        self.featurizer1 = networks.Featurizer(input_shape, self.hparams1)
+        self.classifier1 = networks.Classifier(
+            self.featurizer1.n_outputs,
+            num_classes,
+            self.hparams1['nonlinear_classifier'])
+        self.network1 = nn.Sequential(self.featurizer1, self.classifier1)
+
+        # model_2
+        self.featurizer2 = networks.Featurizer(input_shape, self.hparams2)
+        self.classifier2 = networks.Classifier(
+            self.featurizer2.n_outputs,
+            num_classes,
+            self.hparams2['nonlinear_classifier'])
+        self.network2 = nn.Sequential(self.featurizer2, self.classifier2)
 
 
 class Adaptor(torch.nn.Module):

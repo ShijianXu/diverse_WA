@@ -31,7 +31,7 @@ import torch.utils.data
 from domainbed.lib import misc
 from domainbed import few_shot_datasets
 from domainbed.lib.fast_data_loader import InfiniteDataLoader, FastDataLoader
-from domainbed.few_shot_model import Adaptor, DiWA_Adaptor
+from domainbed.few_shot_model import Adaptor, DiWA_Adaptor, ERM_2
 
 
 def source_test(adaptor, args):
@@ -186,6 +186,11 @@ def _get_args():
     parser.add_argument('--model_name', type=str, default="resnet18")
     parser.add_argument('--num_classes', type=int, default=10)
     parser.add_argument('--target_domain', type=int, default=None)      # only set for PACS & VLCS target_dataset
+    
+    # indicate whether the sweeped model is grad_diverse trained
+    # if set, then each checkpoint contains two model, should handled separately
+    # currently only PACS and VLCS
+    parser.add_argument('--diverse', action='store_true')
 
     inf_args = parser.parse_args()
     return inf_args
@@ -247,6 +252,43 @@ def get_wa_model(ckpt_folders, hparams, args, device):
     return wa_adaptor
 
 
+def get_wa_model_diverse(ckpt_folders, hparams, args, device):
+    wa_adaptor = DiWA_Adaptor(
+        channels=3,
+        num_classes=args.num_classes,
+        hparams=hparams,
+        opt_name=args.opt_name
+    )
+
+    for folder in ckpt_folders:
+        save_dict = torch.load(os.path.join(folder, "model_best.pkl"), map_location=torch.device(device))
+        train_args = save_dict["args"]
+        hparams = save_dict["model_hparams"]
+
+        # load individual weights
+        algorithm = ERM_2(
+            args.num_classes,
+            save_dict["model_hparams1"],
+            save_dict["model_hparams2"],
+        )
+        missing_keys, unexpected_keys = algorithm.load_state_dict(save_dict["model_dict"], strict=False)
+        print(f"Loading individual models with missing_keys: {missing_keys}, unexpected_keys: {unexpected_keys}.")
+        
+        wa_adaptor.add_weights(algorithm.network1)
+        wa_adaptor.add_weights(algorithm.network2)
+        del algorithm
+    
+    wa_adaptor.set_optimizer()
+
+    random.seed(train_args["seed"])
+    np.random.seed(train_args["seed"])
+    torch.manual_seed(train_args["seed"])
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+    return wa_adaptor
+
+
 def main():
     inf_args = _get_args()
     device = "cuda" if torch.cuda.is_available() else "cpu"
@@ -263,7 +305,10 @@ def main():
     hparams['batch_size'] = 8
 
     if inf_args.weight_selection == "uniform":
-        wa_model = get_wa_model(model_folders, hparams, inf_args, device)
+        if inf_args.diverse:
+            wa_model = get_wa_model_diverse(model_folders, hparams, inf_args, device)
+        else:
+            wa_model = get_wa_model(model_folders, hparams, inf_args, device)
 
         # print("Get Averaged Model. Test on the source domain.")
         # source_test(wa_model, inf_args)
