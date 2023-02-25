@@ -13,6 +13,7 @@ from domainbed import few_shot_mnist
 from domainbed import few_shot_svhn
 from domainbed import few_shot_visda_c
 from domainbed import few_shot_usps
+from domainbed import few_shot_domainbed
 
 #========================================
 #                 utils
@@ -184,7 +185,7 @@ class PACS(SingleEnvironmentDatasets):
 
 ## Datasets for MNIST and MNIST-M
 
-def get_dataset(root, data_name, imsize=64, train=True, k_shot=10):
+def get_dataset(root, data_name, imsize=64, train=True, k_shot=10, target_domain=None):
     if data_name == 'MNIST':
         if train:
             if k_shot == -1:
@@ -340,6 +341,18 @@ def get_dataset(root, data_name, imsize=64, train=True, k_shot=10):
         print("Process VisDA validation split and return k-shot VisDA training and test data.")
         return few_shot_visda_c.FewShotVisDA(
             root=os.path.join(root, 'VisDA'), k_shot=k_shot)
+
+    elif data_name == 'PACS' or data_name == 'VLCS':
+        assert target_domain is not None
+        print(f"Processing {data_name} with domain {target_domain}.")
+
+        # TODO
+        return few_shot_domainbed.FewShotDomainBed(
+            root=os.path.join(root, data_name),
+            dataset=data_name, 
+            domain=target_domain, 
+            k_shot=k_shot
+        )
 
     else:
         raise NotImplementedError

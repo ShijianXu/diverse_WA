@@ -3,6 +3,8 @@ python3 -m domainbed.scripts.few_shot_adapt_after_WA \
     --data_dir=../data \
     --model_name resnet50 \
     --target_dataset VisDA \
+    --target_domain 0 \
+        # `target_domain` only used for PACS and VLCS `target_dataset`
     --num_classes 12 \
     --sweep_dir=./VisDA_sweep_diwa_adam \
     --output_dir=./VisDA_adam_diwa_synth2real_adam_10_shot \
@@ -85,6 +87,13 @@ def adapt(adaptor, args):
         visda_dataset = few_shot_datasets.get_dataset(data_dir, 'VisDA_few_shot', k_shot=args.k_shot)
         train_dataset = visda_dataset.train_dataset
         test_dataset = visda_dataset.test_dataset
+    elif args.target_dataset == 'PACS' or args.target_dataset == 'VLCS':
+        domainbed_dataset = few_shot_datasets.get_dataset(
+            data_dir, args.target_dataset, 64, 
+            k_shot=args.k_shot, 
+            target_domain=args.target_domain)
+        train_dataset = domainbed_dataset.train_dataset
+        test_dataset = domainbed_dataset.test_dataset
     else:
         raise NotImplementedError
 
@@ -176,6 +185,7 @@ def _get_args():
     parser.add_argument('--target_dataset', type=str)
     parser.add_argument('--model_name', type=str, default="resnet18")
     parser.add_argument('--num_classes', type=int, default=10)
+    parser.add_argument('--target_domain', type=int, default=None)      # only set for PACS & VLCS target_dataset
 
     inf_args = parser.parse_args()
     return inf_args
