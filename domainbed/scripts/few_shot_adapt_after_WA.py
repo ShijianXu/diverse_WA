@@ -205,7 +205,7 @@ def get_model_folders(inf_args):
 
     output_folders = [
         output_folder for output_folder in output_folders
-        if os.path.isdir(output_folder) and "done" in os.listdir(output_folder) and "model_best.pkl" in os.listdir(output_folder)
+        if os.path.isdir(output_folder) and "done" in os.listdir(output_folder) and "model.pkl" in os.listdir(output_folder)
     ]
 
     model_folders_list = []
