@@ -131,7 +131,7 @@ def download_office_home(data_dir):
 
     # download_and_extract("https://drive.google.com/uc?id=1uY0pj7oFsjMxRwaD3Sxy0jgel0fsYXLC",
     #                      os.path.join(data_dir, "office_home.zip"))
-    download_and_extract("https://drive.google.com/file/d/0B81rNlvomiwed0V1YUxQdC1uOTg/view?usp=sharing&resourcekey=0-2SNWq0CDAuWOBRRBL7ZZsw",
+    download_and_extract("https://drive.google.com/u/0/uc?id=0B81rNlvomiwed0V1YUxQdC1uOTg&export=download&resourcekey=0-2SNWq0CDAuWOBRRBL7ZZsw",
                          os.path.join(data_dir, "office_home.zip"))
 
     os.rename(os.path.join(data_dir, "OfficeHomeDataset_10072016"),
