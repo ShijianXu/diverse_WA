@@ -13,6 +13,20 @@ python3 -m domainbed.scripts.train \
        --path_for_init /scratch/izar/sxu/PACS_test_0_init_sam_rho_0.01.pth \
        --steps 0
 
+python3 -m domainbed.scripts.train \
+       --data_dir=../data \
+       --output_dir=./OfficeHome_0_pretrain_sam_rho_0_05 \
+       --model resnet18 \
+       --algorithm SAM \
+       --sam_rho 0.05 \
+       --dataset OfficeHome \
+       --test_env 0 \
+       --init_step \
+       --path_for_init /scratch/izar/sxu/OfficeHome_0_init_sam_rho_0.05.pth \
+       --steps 0
+
+
+
 # baseline continue train
 python3 -m domainbed.scripts.train \
        --data_dir=../data \
@@ -59,6 +73,10 @@ if __name__ == "__main__":
         help='JSON-serialized hparams dict')
     parser.add_argument('--hparams_seed', type=int, default=0,
         help='Seed for random hparams (0 means "default hparams")')
+    
+    # used to enforce the use of resnet18
+    parser.add_argument('--model', type=str)
+
     parser.add_argument('--trial_seed', type=int, default=0,
         help='Trial number (used for seeding split_dataset and '
         'random_hparams).')
@@ -110,6 +128,9 @@ if __name__ == "__main__":
             misc.seed_hash(args.hparams_seed, args.trial_seed))
     if args.hparams:
         hparams.update(json.loads(args.hparams))
+
+    if args.model == 'resnet18':
+        hparams['resnet18'] = True
 
     print('HParams:')
     for k, v in sorted(hparams.items()):
