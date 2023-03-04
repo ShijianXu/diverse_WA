@@ -134,6 +134,7 @@ class SingleEnvironmentDatasets():
 
 
         direct = os.path.join(root, environment)
+        print("Target domain dir: ", direct)
         classes, class_to_idx = self.find_classes(direct)
 
         self.train_samples = []
