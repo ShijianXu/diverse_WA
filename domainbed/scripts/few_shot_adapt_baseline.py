@@ -207,6 +207,9 @@ def get_model(hparams, args, device):
     state_dict = save_dict["model_dict"]
     for key in list(state_dict.keys()):
         state_dict[key.replace('network.0.network', 'classifier')] = state_dict.pop(key)
+    for key in list(state_dict.keys()):
+        state_dict[key.replace('network.1', 'classifier.fc')] = state_dict.pop(key)
+
     missing_keys, unexpected_keys = adaptor.load_state_dict(state_dict, strict=False)
     print(f"Load model with missing keys {missing_keys} and unexpected keys {unexpected_keys}.")
 
