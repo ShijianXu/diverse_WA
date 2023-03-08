@@ -203,7 +203,11 @@ def get_model(hparams, args, device):
         opt_name=args.opt_name,
         model_name=args.model_name
     )
-    missing_keys, unexpected_keys = adaptor.classifier.load_state_dict(save_dict["model_dict"], strict=False)
+
+    state_dict = save_dict["model_dict"]
+    for key in list(state_dict.keys()):
+        state_dict[key.replace('network.0.network', 'classifier')] = state_dict.pop(key)
+    missing_keys, unexpected_keys = adaptor.classifier.load_state_dict(state_dict, strict=False)
     print(f"Load model with missing keys {missing_keys} and unexpected keys {unexpected_keys}.")
 
     random.seed(train_args["seed"])
