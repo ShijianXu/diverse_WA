@@ -13,6 +13,22 @@ python3 -m domainbed.scripts.few_shot_adapt_baseline \
     --k_shot 10 \
     --steps 2000 \
     --test_freq 10
+
+
+python3 -m domainbed.scripts.few_shot_adapt_baseline \
+    --data_dir=../data \
+    --model_name resnet50 \
+    --target_dataset PACS \
+    --target_domain 0 \
+    --num_classes 7 \
+    --model_path=./PACS_0_baseline_sam_rho_0_05/model_best.pkl \
+    --output_dir=./PACS_0_baseline_sam_rho_0_05 \
+    --opt_name SAM \
+    --sam_rho 0.05 \
+    --k_shot 10 \
+    --steps 2000 \
+    --test_freq 10
+
 """
 
 import argparse
@@ -187,7 +203,7 @@ def get_model(hparams, args, device):
         opt_name=args.opt_name,
         model_name=args.model_name
     )
-    missing_keys, unexpected_keys = adaptor.load_state_dict(save_dict["model_dict"], strict=False)
+    missing_keys, unexpected_keys = adaptor.network.load_state_dict(save_dict["model_dict"], strict=False)
     print(f"Load model with missing keys {missing_keys} and unexpected keys {unexpected_keys}.")
 
     random.seed(train_args["seed"])
